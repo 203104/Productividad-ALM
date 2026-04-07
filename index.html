@@ -127,6 +127,19 @@
         /* Info box */
         .info-box { background: rgba(25,40,83,0.04); border: 1px solid rgba(25,40,83,0.12); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 12px; color: var(--slate); line-height: 1.6; }
         .info-box strong { color: var(--navy); }
+
+        /* Estado de datos */
+        .data-status { background: var(--white); border-radius: 12px; border: 1px solid rgba(25,40,83,0.1); padding: 20px 24px; margin-bottom: 24px; }
+        .data-status-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .data-status-title svg { width: 18px; height: 18px; }
+        .data-status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        @media (max-width: 700px) { .data-status-grid { grid-template-columns: 1fr; } }
+        .data-status-item { background: var(--ice-grey); border-radius: 8px; padding: 14px 16px; }
+        .data-status-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-bottom: 4px; }
+        .data-status-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--navy); }
+        .data-status-detail { font-size: 11px; color: var(--slate); margin-top: 2px; }
+        .data-status-value.empty { color: var(--silver); font-weight: 400; font-size: 13px; }
+        .data-status-loading { color: var(--silver); font-size: 12px; }
     </style>
 </head>
 <body>
@@ -150,6 +163,31 @@
     <div class="info-box">
         <strong>Proceso automatico:</strong> Al subir los archivos, el sistema: 1) Carga los datos (ignorando duplicados), 2) Calcula y guarda la productividad diaria por operario, 3) Limpia data cruda mayor a 2 meses.<br>
         Si subes el mismo archivo dos veces, no se duplica nada.
+    </div>
+
+    <!-- Estado de Datos Cargados -->
+    <div class="data-status" id="dataStatus">
+        <div class="data-status-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Estado de Datos Cargados
+        </div>
+        <div class="data-status-grid">
+            <div class="data-status-item">
+                <div class="data-status-label">LPN Cajas</div>
+                <div class="data-status-value" id="statusCajas"><span class="data-status-loading">Consultando...</span></div>
+                <div class="data-status-detail" id="statusCajasDetail"></div>
+            </div>
+            <div class="data-status-item">
+                <div class="data-status-label">Destino</div>
+                <div class="data-status-value" id="statusDestino"><span class="data-status-loading">Consultando...</span></div>
+                <div class="data-status-detail" id="statusDestinoDetail"></div>
+            </div>
+            <div class="data-status-item">
+                <div class="data-status-label">Productividad Calculada</div>
+                <div class="data-status-value" id="statusProd"><span class="data-status-loading">Consultando...</span></div>
+                <div class="data-status-detail" id="statusProdDetail"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Semana Carga -->
@@ -661,6 +699,88 @@ async function checkConnection() {
     }
 }
 checkConnection();
+
+// ========== ESTADO DE DATOS CARGADOS ==========
+async function loadDataStatus() {
+    const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+    const fmtDate = (d) => {
+        const dt = new Date(d + 'T12:00:00');
+        const dd = String(dt.getDate()).padStart(2,'0');
+        const mm = String(dt.getMonth()+1).padStart(2,'0');
+        const yyyy = dt.getFullYear();
+        return dd + '-' + mm + '-' + yyyy;
+    };
+    const fmtNum = (n) => new Intl.NumberFormat('es-CL').format(n);
+
+    // Consultar rango de fechas y conteo para cada tabla
+    async function queryTable(table, dateCol) {
+        try {
+            const url = SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table) + '?select=' + dateCol + '&order=' + dateCol + '.desc&limit=1';
+            const rMax = await fetch(url, { headers });
+            const maxData = await rMax.json();
+
+            const urlMin = SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table) + '?select=' + dateCol + '&order=' + dateCol + '.asc&limit=1';
+            const rMin = await fetch(urlMin, { headers });
+            const minData = await rMin.json();
+
+            // Conteo con HEAD + Content-Range
+            const urlCount = SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table) + '?select=*&limit=0';
+            const rCount = await fetch(urlCount, { headers: { ...headers, 'Prefer': 'count=exact' } });
+            const range = rCount.headers.get('content-range');
+            const total = range ? parseInt(range.split('/')[1]) : 0;
+
+            if (maxData.length === 0) return { empty: true };
+            return {
+                empty: false,
+                min: minData[0][dateCol],
+                max: maxData[0][dateCol],
+                total: total
+            };
+        } catch(e) {
+            return { error: e.message };
+        }
+    }
+
+    // LPN Cajas
+    const cajas = await queryTable('3-historial_cajas', 'fecha_produccion');
+    const elCajas = document.getElementById('statusCajas');
+    const elCajasD = document.getElementById('statusCajasDetail');
+    if (cajas.error) {
+        elCajas.innerHTML = '<span class="data-status-value empty">Error al consultar</span>';
+    } else if (cajas.empty) {
+        elCajas.innerHTML = '<span class="data-status-value empty">Sin datos</span>';
+    } else {
+        elCajas.textContent = 'Hasta ' + fmtDate(cajas.max);
+        elCajasD.textContent = 'Desde ' + fmtDate(cajas.min) + ' · ' + fmtNum(cajas.total) + ' registros';
+    }
+
+    // Destino
+    const destino = await queryTable('3-historial_destino', 'fecha_produccion');
+    const elDest = document.getElementById('statusDestino');
+    const elDestD = document.getElementById('statusDestinoDetail');
+    if (destino.error) {
+        elDest.innerHTML = '<span class="data-status-value empty">Error al consultar</span>';
+    } else if (destino.empty) {
+        elDest.innerHTML = '<span class="data-status-value empty">Sin datos</span>';
+    } else {
+        elDest.textContent = 'Hasta ' + fmtDate(destino.max);
+        elDestD.textContent = 'Desde ' + fmtDate(destino.min) + ' · ' + fmtNum(destino.total) + ' registros';
+    }
+
+    // Productividad
+    const prod = await queryTable('3-productividad_final', 'dia');
+    const elProd = document.getElementById('statusProd');
+    const elProdD = document.getElementById('statusProdDetail');
+    if (prod.error) {
+        elProd.innerHTML = '<span class="data-status-value empty">Error al consultar</span>';
+    } else if (prod.empty) {
+        elProd.innerHTML = '<span class="data-status-value empty">Sin datos</span>';
+    } else {
+        elProd.textContent = 'Hasta ' + fmtDate(prod.max);
+        elProdD.textContent = 'Desde ' + fmtDate(prod.min) + ' · ' + fmtNum(prod.total) + ' registros';
+    }
+}
+loadDataStatus();
 
 // Auto-fill semana carga
 const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];

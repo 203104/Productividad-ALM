@@ -85,28 +85,586 @@
         /* Progress */
         .progress-section { background: var(--white); border-radius: 12px; padding: 24px; margin-bottom: 20px; display: none; }
         .progress-section.visible { display: block; }
-ÙÜ\ÜË]]HÈÛ\Ú^NMÈÛ]ÙZYÚ
-ÌÈX\Ú[XÝÛNMÈBÙÜ\ÜËZ][HÈ\Ü^N^È[YÛZ][\ÎÙ[\ÈØ\LÈY[ÎLÈÜ\XÝÛN\ÛÛY\KZXÙKYÜ^JNÈBÙÜ\ÜËZ][N\ÝXÚ[ÈÜ\XÝÛNÛNÈBÙÜ\ÜËZXÛÛÈÚYÈZYÚÈÜ\\Y]\ÎÈ\Ü^N^È[YÛZ][\ÎÙ[\È\ÝYKXÛÛ[Ù[\ÈÛ\Ú^NMÈ^\Ú[ÎÈBÙÜ\ÜËZXÛÛ[[ÈÈXÚÙÜÝ[\KZXÙKYÜ^JNÈÛÛÜ\K\Ú[\NÈBÙÜ\ÜËZXÛÛ[[ÈÈXÚÙÜÝ[ØJK
-ËJNÈÛÛÜ\K[]JNÈBÙÜ\ÜËZXÛÛÛHÈXÚÙÜÝ[ØJËLÎ
-ÍJNÈÛÛÜ\K\ÝXØÙ\ÜÊNÈBÙÜ\ÜËZXÛÛ\ÜÈXÚÙÜÝ[ØJK
-LË
-LËJNÈÛÛÜ\KY\ÜNÈBÙÜ\ÜËZ[ÈÈ^NÈBÙÜ\ÜË[[YHÈÛ\Ú^NLÜÈÛ]ÙZYÚ
-ÈBÙÜ\ÜËY]Z[ÈÛ\Ú^NL\ÈÛÛÜ\K\Û]JNÈX\Ú[]ÜÈBÙÜ\ÜËX\XÛÛZ[\ÈÚYMÈZYÚ
-ÈXÚÙÜÝ[\KZXÙKYÜ^JNÈÜ\\Y]\ÎÜÈÝ\ÝÎY[È^\Ú[ÎÈBÙÜ\ÜËX\Y[ÈZYÚL	NÈXÚÙÜÝ[\K[]JNÈÜ\\Y]\ÎÜÈ[Ú][ÛÚYÜÎÈÚY	NÈBÙÜ\ÜËX\Y[ÛHÈXÚÙÜÝ[\K\ÝXØÙ\ÜÊNÈBÙÜ\ÜËX\Y[\ÜÈXÚÙÜÝ[\KY\ÜNÈBÙÜ\ÜË\ÝÈÛY[Z[N	Ò]Z[È[ÛÉË[ÛÜÜXÙNÈÛ\Ú^NLÈÛÛÜ\K[]JNÈÚY
-È^X[YÛYÚÈ^\Ú[ÎÈBÊÝ[[X\H
-ÂÝ[[X\KXØ\ÈXÚÙÜÝ[\K]Ú]JNÈÜ\\Y]\ÎLÈÜ\[Y
-ÛÛY\K\ÝXØÙ\ÜÊNÈY[ÎÈX\Ú[XÝÛNÈ\Ü^NÛNÈBÝ[[X\KXØ\\ÚXHÈ\Ü^NØÚÎÈBÝ[[X\KXØ\\ËY\ÜÈÈÜ\[YXÛÛÜ\K]Ø\[ÊNÈBÝ[[X\K]]HÈÛ\Ú^NMÈÛ]ÙZYÚ
-ÌÈÛÛÜ\K\ÝXØÙ\ÜÊNÈX\Ú[XÝÛNLÈBÝ[[X\KXØ\\ËY\ÜÈÝ[[X\K]]HÈÛÛÜ\K]Ø\[ÊNÈBÝ[[X\K\Ý]ÈÈ\Ü^N^ÈØ\ÌÈ^]Ü\Ü\ÈBÝ[[X\K\Ý]][YHÈÛY[Z[N	Ò]Z[È[ÛÉË[ÛÜÜXÙNÈÛ\Ú^NÈÛ]ÙZYÚ
-ÌÈÛÛÜ\K[]JNÈBÝ[[X\K\Ý][X[ÈÛ\Ú^NL\ÈÛÛÜ\K\Û]JNÈBÊÙÈ
-ÂÙË\ÙXÝ[ÛÈXÚÙÜÝ[\K]Ú]JNÈÜ\\Y]\ÎLÈY[ÎÈBÙË]]HÈÛ\Ú^NMÈÛ]ÙZYÚ
-ÌÈX\Ú[XÝÛNLÈ\Ü^N^È[YÛZ][\ÎÙ[\È\ÝYKXÛÛ[ÜXÙKX]ÙY[ÈBÙËY[Y\ÈÈX^ZZYÚLÈÝ\ÝË^N]]ÎÈÛY[Z[N	Ò]Z[È[ÛÉË[ÛÜÜXÙNÈÛ\Ú^NL\È[KZZYÚKÈÛÛÜ\K\Û]JNÈBÙËY[KÝXØÙ\ÜÈÈÛÛÜ\K\ÝXØÙ\ÜÊNÈBÙËY[K\ÜÈÛÛÜ\KY\ÜNÈBÙËY[K[ÈÈÛÛÜ\K[]JNÈBÙËY[H[Y\Ý[\ÈÛÛÜ\K\Ú[\NÈBÙ^Y[Y\ÈÜ[ÈÈÈ[ÙÜNÝ]JÍYÊNÈHBÜ[\ÈÚYMÈZYÚMÈÜ\ÛÛY\KZXÙKYÜ^JNÈÜ\]ÜXÛÛÜ\K[]JNÈÜ\\Y]\Î
-L	NÈ[[X][ÛÜ[È[X\[[]NÈ\Ü^N[[KXØÚÎÈBÊ[ÈÞ
-Â[ËXÞÈXÚÙÜÝ[ØJK
-Ë
+        .progress-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+        .progress-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ice-grey); }
+        .progress-item:last-child { border-bottom: none; }
+        .progress-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .progress-icon.pending { background: var(--ice-grey); color: var(--silver); }
+        .progress-icon.running { background: rgba(25,40,83,0.1); color: var(--navy); }
+        .progress-icon.done { background: rgba(27,138,74,0.1); color: var(--success); }
+        .progress-icon.error { background: rgba(201,53,53,0.1); color: var(--error); }
+        .progress-info { flex: 1; }
+        .progress-name { font-size: 13px; font-weight: 600; }
+        .progress-detail { font-size: 11px; color: var(--slate); margin-top: 2px; }
+        .progress-bar-container { width: 140px; height: 6px; background: var(--ice-grey); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+        .progress-bar-fill { height: 100%; background: var(--navy); border-radius: 3px; transition: width 0.3s; width: 0%; }
+        .progress-bar-fill.done { background: var(--success); }
+        .progress-bar-fill.error { background: var(--error); }
+        .progress-pct { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--navy); width: 40px; text-align: right; flex-shrink: 0; }
 
-NÈÜ\\ÛÛYØJK
-ËLNÈÜ\\Y]\ÎLÈY[ÎMNÈX\Ú[XÝÛNÈÛ\Ú^NLÈÛÛÜ\K\Û]JNÈ[KZZYÚKÈB[ËXÞÝÛÈÈÛÛÜ\K[]JNÈBÜÝ[OÚXYÙOKKHXY\KO]Û\ÜÏHXY\]Û\ÜÏHXY\[Y]Û\ÜÏHXY\[ÙÛÈÙ]OZ[\ÙÚ\ÝXÜÏÚOÙ]]Û\ÜÏHXY\\Ý]\È]Û\ÜÏHÝ]\ËYÝYHÝ]\ÑÝÙ]Ü[YHÝ]\Õ^ÛÛXÝ[ËÜÜ[Ù]Ù]]Û\ÜÏHXZ[Û\ÜÏHYÙK]]HØ\ØHH]ÜÈHÙXÝ]YYÚÛ\ÜÏHYÙK\ÝX]HÝXHÜÈ\Ú]ÜÈ^Ù[[ÓTÈ8 %HÙXÝ]YYÙHØ[Ý[HH[XXÙ[H]]ÛX]XØ[Y[OÜ]Û\ÜÏH[ËXÞÝÛÏØÙ\ÛÈ]]ÛX]XÛÎÜÝÛÏ[ÝX\ÜÈ\Ú]ÜË[Ú\Ý[XNJHØ\ØHÜÈ]ÜÈ
-YÛÜ[È\XØYÜÊKHØ[Ý[HHÝX\HHÙXÝ]YYX\XHÜÜ\\[ËÊH[\XH]HÜYHX^[ÜHY\Ù\ËÚHÝX\È[Z\Û[È\Ú]ÈÜÈXÙ\ËÈÙH\XØHYKÙ]KKHÙ[X[HØ\ØHKO]Û\ÜÏHÙ[X[K\ÙXÝ[ÛX[Y[YXØYÜHØ\ØNÛX[[]\OH^Û\ÜÏHÙ[X[KZ[]YHÙ[X[PØ\ØHXÙZÛ\HZX\ÈÜ[Û\ÜÏHÙ[X[KZ[ÛXH[\[ÙÈ]YH\Ý\ÈÝXY[ÏÜÜ[Ù]KKH\ØYØ\ÎÛÛÈÐRTÈHTÕSÈKO]Û\ÜÏH\ØYYÜY]Û\ÜÏH\ØYXØ\YHØ\ØZ\ÈÛYÛÝ\H[QYÓÝ\][	ØØZ\ÉÊHÛYÛX]OH[QYÓX]J][	ØØZ\ÉÊHÛÜH[QÜ
-][	ØØZ\ÉÊH]Û\ÜÏHØ\ZXÛÛÝÈY]ÐÞH[HÛHÝÚÙOHÝ\[ÛÛÜÝÚÙK]ÚYHXÝHOHÈÚYHZYÚHNHÏ]HLZÏ]HNHUHÏÜÝÏÙ]]Û\ÜÏHØ\[X[XNËZ\ÝÜX[ØØZ\ÏÙ]]Û\ÜÏHØ\]]H\ÝÜX[ØZ\ÏÙ]]Û\ÜÏHØ\Y\ØÈYH\ØÐØZ\È\\ÝH[^Ù[È^ÛXÚÈ\HÙ[XØÚ[Û\Ù]]Û\ÜÏHØ\Y[[[YHYH[[[YPØZ\ÈÙ]]Û\ÜÏHØ\\Ý]ÈYHÝ]ÐØZ\ÈÙ]]Û\ÜÏHØ\\Ý]Ë[X[YHÝ]ÓX[ØZ\ÈÙ][]\OH[HXØÙ\HÞÈÛÚ[ÙOH[Q[J][	ØØZ\ÉÊH]ÛÛ\ÜÏH[[ÝKXYH[[ÝPØZ\ÈÝ[OH\Ü^NÛHÛÛXÚÏH[[ÝQ[J][	ØØZ\ÉÊHÌL
-NÏØ]ÛÙ]]Û\ÜÏH\ØYXØ\YHØ\\Ý[ÈÛYÛÝ\H[QYÓÝ\][	Ù\Ý[ÉÊHÛYÛX]OH[QYÓX]J][	Ù\Ý[ÉÊHÛÜH[QÜ
-][	Ù\Ý[ÉÊH]Û\ÜÏHØ\ZXÛÛÇ7frfWt&÷Ò##B#B"fÆÃÒ&æöæR"7G&ö¶SÒ&7W'&VçD6öÆ÷""7G&ö¶R×vGFÒ#"#ãÇFCÒ$Ó#ec""ÓÓãs6ÂÓrÓF""Ó"ÂÓrD""2c""ãs6ÃrF"""ÃrÓD""#g¢"óãÇöÇÆæRöçG3Ò#2ã#rbãb""ã#ãs2bãb"óãÆÆæRÒ#""Ò##"ã"#Ò#""#Ò#""óãÂ÷7fsà¢ÂöFcà¢ÆFb6Æ73Ò&6&BÖÆ&VÂ#åF&Æ¢2Ö7F÷&ÅöFW7FæóÂöFcà¢ÆFb6Æ73Ò&6&B×FFÆR#ä7F÷&ÂÅâFW7FæóÂöFcà¢ÆFb6Æ73Ò&6&BÖFW62"CÒ&FW64FW7Fæò#ä'&7G&VÂW6VÂò¢6Æ6²&6VÆV66öæ#ÂöFcà¢ÆFb6Æ73Ò&6&BÖfÆVæÖR"CÒ&fÆVæÖTFW7Fæò#ãÂöFcà¢ÆFb6Æ73Ò&6&B×7FG2"CÒ'7FG4FW7Fæò#ãÂöFcà¢ÆFb6Æ73Ò&6&B×7FG2ÖÆ&VÂ"CÒ'7FG4Æ&VÄFW7Fæò#ãÂöFcà¢ÆçWBGSÒ&fÆR"66WCÒ"çÇ7ÂçÇ2"öæ6ævSÒ&æFÆTfÆRWfVçBÂvFW7Fæòr#à¢Æ'WGFöâ6Æ73Ò'&VÖ÷fRÖ'Fâ"CÒ'&VÖ÷fTFW7Fæò"7GÆSÒ&F7Æ¦æöæR"öæ6Æ6³Ò'&VÖ÷fTfÆRWfVçBÂvFW7Fæòr#âb3S³Âö'WGFöãà¢ÂöFcà¢ÂöFcà ¢ÂÒÒ7Föâ&"ÒÓà¢ÆFb6Æ73Ò&7FöâÖ&"#à¢ÆFb6Æ73Ò&fÆRÖ6÷VçB"CÒ&fÆT6÷VçB#äææwVâ&6fò6VÆV66öæFóÂöFcà¢Æ'WGFöâ6Æ73Ò&'Fâ×WÆöB"CÒ&'FåWÆöB"F6&ÆVBöæ6Æ6³Ò'7F'EWÆöB#å7V&"6Æ7VÆ#Âö'WGFöãà¢ÂöFcà ¢ÂÒÒ&öw&W72ÒÓà¢ÆFb6Æ73Ò'&öw&W72×6V7Föâ"CÒ'&öw&W756V7Föâ#à¢ÆFb6Æ73Ò'&öw&W72×FFÆR#å&öw&W6òFVÂ&ö6W6óÂöFcà¢ÆFbCÒ'&öw&W74FV×2#ãÂöFcà¢ÂöFcà ¢ÂÒÒ7VÖÖ'ÒÓà¢ÆFb6Æ73Ò'7VÖÖ'Ö6&B"CÒ'7VÖÖ'6&B#à¢ÆFb6Æ73Ò'7VÖÖ'×FFÆR"CÒ'7VÖÖ'FFÆR#ãÂöFcà¢ÆFb6Æ73Ò'7VÖÖ'×7FG2"CÒ'7VÖÖ'7FG2#ãÂöFcà¢ÂöFcà ¢ÂÒÒÆörÒÓà¢ÆFb6Æ73Ò&Æör×6V7Föâ#à¢ÆFb6Æ73Ò&Æör×FFÆR#à¢Ç7ãå&Vv7G&òFR7FfFCÂ÷7ãà¢Æ'WGFöâöæ6Æ6³Ò&Fö7VÖVçBævWDVÆVÖVçD'BvÆötVçG&W2ræææW$DÔÃÒrr"7GÆSÒ&&÷&FW#¦æöæS¶&6¶w&÷VæC¦æöæS¶6öÆ÷#§f"Ò×6ÇfW"¶7W'6÷#§öçFW#¶föçB×6¦S£²#äÆ×#Âö'WGFöãà¢ÂöFcà¢ÆFb6Æ73Ò&ÆörÖVçG&W2"CÒ&ÆötVçG&W2#ãÂöFcà¢ÂöFcà£ÂöFcà £Ç67&Cà¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òò4ôäduU$4ôâ5U$4P¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦6öç7B5U$4UõU$ÂÒvGG3¢ò÷6×W¦öFW&wæ÷F¶¢ç7W&6Ræ6òs°¦6öç7B5U$4Uô´UÒvW¦$v6ö¤W¤æ4å#V44d·d4£æW§34Öö§¦E&Ôg¥¥44ä¦Å¦dæ¦%#Uwfu&ÆT¦æ4sWfDwGv6Ó5¥4dÔgV##FÄ4§ö¤S4ç¤×æ¥õE4ÕcF44dÖ¤DôF3Ö¤STääcT¦ÆDW£Ä&¶'D5£fs¤³#v4FçtçFä¤ÄGUtãBs°¦6öç7B$D4õ4¤RÒC° ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òòÔTòDR4ôÅTÔä2U4TÂÓâ5U$4P¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦6öç7B4ôÅTÔåôÔÒ°¢6¦3¢°¢tBÅâs¢vEöÇârÀ¢u$ôET5Dòs¢w&öGV7FòrÀ¢tTÕ$U4$ôBs¢vV×&W6÷&öBrÀ¢uT$44ôâs¢wV&66öârÀ¢uT$44ôâ$Ubâs¢wV&66öå÷&WbrÀ¢uT$44ôâ$Ubs¢wV&66öå÷&WbrÀ¢tdT4ÔôBâs¢vfV6öÖöBrÀ¢tdT4ÔôBs¢vfV6öÖöBrÀ¢uU5T$òTÅBÔôBâs¢wW7V&òrÀ¢uU5T$òTÅBÔôBs¢wW7V&òrÀ¢tÔ"âs¢vÖ%÷rÀ¢tÔ"s¢vÖ%÷rÀ¢ÒÀ¢FW7Fæó¢°¢tBÅâs¢vEöÇârÀ¢u$ôET5Dòs¢w&öGV7FòrÀ¢tTÕ$U4$ôBs¢vV×&W6÷&öBrÀ¢uT$25Bâs¢wV&5ö7GVÂrÀ¢uT$25Bs¢wV&5ö7GVÂrÀ¢uT$2åBâs¢wV&5öçFW&÷"rÀ¢uT$2åBs¢wV&5öçFW&÷"rÀ¢tdT4TÅBÔôBs¢vfV6öÖöBrÀ¢tdT4TÅBÔôBâs¢vfV6öÖöBrÀ¢uU5T$òTÅDÔÔôBs¢wW7V&òrÀ¢uU5T$òTÅDÔÔôBâs¢wW7V&òrÀ¢Ð§Ó° ¦6öç7BD$ÄUôÔÒ°¢6¦3¢s2Ö7F÷&Åö6¦2rÀ¢FW7Fæó¢s2Ö7F÷&ÅöFW7FæòrÀ§Ó°¦6öç7BÄ$TÅôÔÒ°¢6¦3¢t7F÷&ÂÅâ6¦2rÀ¢FW7Fæó¢t7F÷&ÂÅâFW7FæòrÀ§Ó°¦6öç7B4$EôÔÒ°¢6¦3¢v6&D6¦2rÀ¢FW7Fæó¢v6&DFW7FæòrÀ§Ó°¦6öç7B4ôÔÒ²6¦3¢t6¦2rÂFW7Fæó¢tFW7FæòrÓ° ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òò5DDP¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦ÆWBfÆW2Ò²6¦3¢çVÆÂÂFW7Fæó¢çVÆÂÓ°¦ÆWB'6VDFFÒ²6¦3¢çVÆÂÂFW7Fæó¢çVÆÂÓ°¦ÆWBWÆöFærÒfÇ6S° ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òòE$rbE$õòdÄR4TÄT5@¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦gVæ7FöâæFÆTG&t÷fW"RÂGR²Rç&WfVçDFVfVÇB²Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒæ6Æ74Æ7BæFBvG&v÷fW"r²Ð¦gVæ7FöâæFÆTG&tÆVfRRÂGR²Rç&WfVçDFVfVÇB²Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒæ6Æ74Æ7Bç&VÖ÷fRvG&v÷fW"r²Ð¦gVæ7FöâæFÆTG&÷RÂGR°¢Rç&WfVçDFVfVÇB°¢Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒæ6Æ74Æ7Bç&VÖ÷fRvG&v÷fW"r°¢6öç7BfÆRÒRæFFG&ç6fW"æfÆW5³Ó°¢bfÆRbbfÆRææÖRæVæG5vFrçÇ7rÇÂfÆRææÖRæVæG5vFrçÇ2r&ö6W74fÆRfÆRÂGR°§Ð¦gVæ7FöâæFÆTfÆRRÂGR²6öç7BfÆRÒRçF&vWBæfÆW5³Ó²bfÆR&ö6W74fÆRfÆRÂGR²Ð ¦gVæ7Föâ&VÖ÷fTfÆRRÂGR°¢Rç&WfVçDFVfVÇB²Rç7F÷&÷vFöâ°¢fÆW5·GUÒÒçVÆÃ²'6VDFF·GUÒÒçVÆÃ°¢6öç7B2Ò4ôÔ·GUÓ°¢Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒæ6Æ74Æ7Bç&VÖ÷fRv2ÖfÆRr°¢Fö7VÖVçBævWDVÆVÖVçD'BvfÆVæÖRr¶2çFWD6öçFVçBÒrs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FG2r¶2çFWD6öçFVçBÒrs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FG4Æ&VÂr¶2çFWD6öçFVçBÒrs°¢Fö7VÖVçBævWDVÆVÖVçD'BvFW62r¶2ç7GÆRæF7ÆÒrs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw&VÖ÷fRr¶2ç7GÆRæF7ÆÒvæöæRs°¢Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒçVW'6VÆV7F÷"vçWE·GSÒ&fÆR%ÒrçfÇVRÒrs°¢WFFTfÆT6÷VçB°¢ÆörvæfòrÂt&6fò&VÖ÷fFòFRr²Ä$TÅôÔ·GUÒ°§Ð ¦gVæ7Föâ&ö6W74fÆRfÆRÂGR°¢fÆW5·GUÒÒfÆS°¢ÆörvæfòrÂtÆWVæFòr²fÆRææÖR²râââr°¢6öç7B&VFW"ÒæWrfÆU&VFW"°¢&VFW"æöæÆöBÒgVæ7FöâR°¢G'°¢6öç7BFFÒæWrVçC'&RçF&vWBç&W7VÇB°¢6öç7Bv"ÒÅ5ç&VBFFÂ²GS¢v'&rÂ6VÆÄFFW3¢G'VRÒ°¢6öç7Bw2Òv"å6VWG5·v"å6VWDæÖW5³ÕÓ°¢6öç7B§6öâÒÅ5çWFÇ2ç6VWE÷Fõö§6öâw2Â²FVgfÃ¢çVÆÂÒ° ¢6öç7BÖVBÒÖ6öÇVÖç2§6öâÂGR°¢'6VDFF·GUÒÒÖVC° ¢6öç7B2Ò4ôÔ·GUÓ°¢Fö7VÖVçBævWDVÆVÖVçD'B4$EôÔ·GUÒæ6Æ74Æ7BæFBv2ÖfÆRr°¢Fö7VÖVçBævWDVÆVÖVçD'BvfÆVæÖRr¶2çFWD6öçFVçBÒfÆRææÖS°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FG2r¶2çFWD6öçFVçBÒÖVBæÆVæwFçFôÆö6ÆU7G&ærvW2Ô4Âr°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FG4Æ&VÂr¶2çFWD6öçFVçBÒvfÆ2FWFV7FF2s°¢Fö7VÖVçBævWDVÆVÖVçD'BvFW62r¶2ç7GÆRæF7ÆÒvæöæRs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw&VÖ÷fRr¶2ç7GÆRæF7ÆÒvfÆWs° ¢Æörw7V66W72rÂfÆRææÖR²s¢r²ÖVBæÆVæwFçFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ2Æ7F2r°¢WFFTfÆT6÷VçB°¢Ò6F6W'"°¢ÆörvW'&÷"rÂtW'&÷"ÆWVæFòr²fÆRææÖR²s¢r²W'"æÖW76vR°¢fÆW5·GUÒÒçVÆÃ°¢Ð¢Ó°¢&VFW"ç&VD4'&'VffW"fÆR°§Ð ¦gVæ7FöâÖ6öÇVÖç2&÷w2ÂGR°¢6öç7B6öÄÖÒ4ôÅTÔåôÔ·GUÓ°¢6öç7B6VÖæ6&vÒFö7VÖVçBævWDVÆVÖVçD'Bw6VÖæ6&vrçfÇVRÇÂw6âÖWFVWFs° ¢&WGW&â&÷w2æÖ&÷rÓâ°¢6öç7BÖVBÒ·Ó°¢f÷"6öç7B¶W6VÄ6öÂÂF$6öÅÒöbö&¦V7BæVçG&W26öÄÖ°¢b&÷u¶W6VÄ6öÅÒÓÒVæFVfæVBbb&÷u¶W6VÄ6öÅÒÓÒçVÆÂbbÖVE¶F$6öÅÒ°¢ÆWBfÂÒ&÷u¶W6VÄ6öÅÓ° ¢òòfV6Óâ4ò7G&æp¢bF$6öÂÓÓÒvfV6öÖöBrbbfÂ°¢bfÂç7Fæ6VöbFFR°¢fÂÒfÂçFô4õ7G&ær°¢ÒVÇ6RbGVöbfÂÓÓÒw7G&ærrbbfÂææ6ÇVFW2uBr°¢G'²fÂÒæWrFFRfÂçFô4õ7G&ær²Ò6F6R·Ð¢Ð¢Ð ¢òò7G&æw0¢b²vEöÇârÂwW7V&òrÂw&öGV7FòrÂvV×&W6÷&öBrÂwV&66öârÂwV&66öå÷&WbrÂwV&5ö7GVÂrÂwV&5öçFW&÷"rÂvÖ%÷uÒææ6ÇVFW2F$6öÂbbfÂÓÒçVÆÂ°¢fÂÒ7G&ærfÂçG&Ò°¢Ð ¢ÖVE¶F$6öÅÒÒfÃ°¢Ð¢Ð¢ÖVBç6VÖæö6&vÒ6VÖæ6&v°¢&WGW&âÖVC°¢ÒæfÇFW"&÷rÓâ°¢òò6öÆòfÆ26öâFF÷26ÆfP¢&WGW&â&÷ræEöÇâbb&÷ræfV6öÖöBbb&÷rçW7V&ó°¢Ò°§Ð ¦gVæ7FöâWFFTfÆT6÷VçB°¢6öç7B6÷VçBÒö&¦V7BçfÇVW2'6VDFFæfÇFW"BÓâBbbBæÆVæwFâæÆVæwF°¢6öç7BF÷FÅ&÷w2Òö&¦V7BçfÇVW2'6VDFFç&VGV6R7VÒÂBÓâ7VÒ²BòBæÆVæwF¢Â°¢6öç7BVÂÒFö7VÖVçBævWDVÆVÖVçD'BvfÆT6÷VçBr°¢b6÷VçBÓÓÒ°¢VÂæææW$DÔÂÒtææwVâ&6fò6VÆV66öæFòs°¢ÒVÇ6R°¢VÂæææW$DÔÂÒsÇ7G&öæsâr²6÷VçB²sÂ÷7G&öæsâ&6fòr²6÷VçBâòw2r¢rr°¢r6öâÇ7G&öæsâr²F÷FÅ&÷w2çFôÆö6ÆU7G&ærvW2Ô4Âr²sÂ÷7G&öæsâfÆ2VâF÷FÂs°¢Ð¢Fö7VÖVçBævWDVÆVÖVçD'Bv'FåWÆöBræF6&ÆVBÒ6÷VçBÓÓÒÇÂWÆöFæs°§Ð ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òòTÅU%3¢%2²$ôu$U50¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ ¢òòÆÆÖ"gVæ6öâ%2FR7W&6P¦7æ2gVæ7Föâ6ÆÅ%2fäæÖRÂ&×2Ò·Ò°¢6öç7B&W7öç6RÒvBfWF65U$4UõU$Â²r÷&W7B÷c÷'2òr²fäæÖRÂ°¢ÖWFöC¢uõ5BrÀ¢VFW'3¢°¢t6öçFVçBÕGRs¢vÆ6Föâö§6öârÀ¢v¶Ws¢5U$4Uô´UÀ¢tWF÷&¦Föâs¢t&V&W"r²5U$4Uô´UÀ¢ÒÀ¢&öG¢¥4ôâç7G&ævg&×2À¢Ò°¢b&W7öç6Ræö²°¢6öç7BW'%FWBÒvB&W7öç6RçFWB°¢F&÷ræWrW'&÷"u%2r²fäæÖR²rEEr²&W7öç6Rç7FGW2²s¢r²W'%FWBç7V'7G&ærÂ3°¢Ð¢&WGW&â&W7öç6Ræ§6öâ°§Ð ¢òòFWFV7F"&ævòFRfV62FRÆ÷2FF÷2'6VF÷0¦gVæ7FöâFWFV7DFFU&ævR°¢ÆWBÖäFFRÒçVÆÂÂÖFFRÒçVÆÃ°¢f÷"6öç7BGRöbö&¦V7Bæ¶W2'6VDFF°¢b'6VDFF·GUÒ6öçFçVS°¢f÷"6öç7B&÷röb'6VDFF·GUÒ°¢b&÷ræfV6öÖöB6öçFçVS°¢6öç7BBÒæWrFFR&÷ræfV6öÖöB°¢b4æâB°¢bÖäFFRÇÂBÂÖäFFRÖäFFRÒC°¢bÖFFRÇÂBâÖFFRÖFFRÒC°¢Ð¢Ð¢Ð¢bÖäFFRbbÖFFR°¢&WGW&â°¢FW6FS¢ÖäFFRçFô4õ7G&ærç7ÆBuBr³ÒÀ¢7F¢ÖFFRçFô4õ7G&ærç7ÆBuBr³ÒÀ¢Ó°¢Ð¢&WGW&âçVÆÃ°§Ð ¢òò7&V"FVÒFR&öw&W6òFæÖ6ÖVçFP¦gVæ7FöâFE&öw&W74FVÒBÂæÖRÂFWFÂ°¢6öç7B6öçFæW"ÒFö7VÖVçBævWDVÆVÖVçD'Bw&öw&W74FV×2r°¢6öç7BFÖÂÒsÆFb6Æ73Ò'&öw&W72ÖFVÒ"CÒ'&örÒr²B²r#âr°¢sÆFb6Æ73Ò'&öw&W72Ö6öâVæFær"CÒ'&öt6öâÒr²B²r#âb3c33³ÂöFcâr°¢sÆFb6Æ73Ò'&öw&W72Öæfò#âr°¢sÆFb6Æ73Ò'&öw&W72ÖæÖR#âr²æÖR²sÂöFcâr°¢sÆFb6Æ73Ò'&öw&W72ÖFWFÂ"CÒ'&ötFWFÂÒr²B²r#âr²FWFÂ²sÂöFcâr°¢sÂöFcâr°¢sÆFb6Æ73Ò'&öw&W72Ö&"Ö6öçFæW"#ãÆFb6Æ73Ò'&öw&W72Ö&"ÖfÆÂ"CÒ'&öt&"Òr²B²r#ãÂöFcãÂöFcâr°¢sÆFb6Æ73Ò'&öw&W72×7B"CÒ'&öu7BÒr²B²r#î(	CÂöFcâr°¢sÂöFcâs°¢6öçFæW"æç6W'DF¦6VçDDÔÂv&Vf÷&VVæBrÂFÖÂ°§Ð ¢òò7GVÆ¦"W7FFòFRVâFVÒFR&öw&W6ð¦gVæ7Föâ6WE&öw&W757FFRBÂ7FFRÂFWFÂÂ7B°¢6öç7B6öâÒFö7VÖVçBævWDVÆVÖVçD'Bw&öt6öâÒr²B°¢6öç7B&"ÒFö7VÖVçBævWDVÆVÖVçD'Bw&öt&"Òr²B°¢6öç7BFWFÄVÂÒFö7VÖVçBævWDVÆVÖVçD'Bw&ötFWFÂÒr²B°¢6öç7B7DVÂÒFö7VÖVçBævWDVÆVÖVçD'Bw&öu7BÒr²B°¢b7FFRÓÓÒw'Vææærr°¢6öâæ6Æ74æÖRÒw&öw&W72Ö6öâ'Vææærs°¢6öâæææW$DÔÂÒsÆFb6Æ73Ò'7ææW"#ãÂöFcâs°¢ÒVÇ6Rb7FFRÓÓÒvFöæRr°¢6öâæ6Æ74æÖRÒw&öw&W72Ö6öâFöæRs²6öâçFWD6öçFVçBÒuÇS#s2s°¢b&"&"æ6Æ74Æ7BæFBvFöæRr°¢ÒVÇ6Rb7FFRÓÓÒvW'&÷"r°¢6öâæ6Æ74æÖRÒw&öw&W72Ö6öâW'&÷"s²6öâçFWD6öçFVçBÒrs°¢b&"&"æ6Æ74Æ7BæFBvW'&÷"r°¢Ð¢bFWFÂbbFWFÄVÂFWFÄVÂçFWD6öçFVçBÒFWFÃ°¢b&"bb7BÓÒVæFVfæVB&"ç7GÆRçvGFÒ7B²rRs°¢b7DVÂbb7BÓÒVæFVfæVB7DVÂçFWD6öçFVçBÒ7B²rRs°§Ð ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òòUÄôB²UDòÔ4Ä5TÄò²ÄÕU¤&ö6W6ò6ö×ÆWFò¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦7æ2gVæ7Föâ7F'EWÆöB°¢bWÆöFær&WGW&ã°¢WÆöFærÒG'VS° ¢6öç7B'FâÒFö7VÖVçBævWDVÆVÖVçD'Bv'FåWÆöBr°¢'FâæF6&ÆVBÒG'VS²'Fâæ6Æ74Æ7BæFBwWÆöFærr²'FâçFWD6öçFVçBÒu&ö6W6æFòâââs° ¢6öç7B&öw&W756V7FöâÒFö7VÖVçBævWDVÆVÖVçD'Bw&öw&W756V7Föâr°¢&öw&W756V7Föâæ6Æ74Æ7BæFBwf6&ÆRr°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7VÖÖ'6&Bræ6Æ74Æ7Bç&VÖ÷fRwf6&ÆRrÂv2ÖW'&÷'2r° ¢6öç7BGW2Òö&¦V7Bæ¶W2'6VDFFæfÇFW"BÓâ'6VDFF·EÒbb'6VDFF·EÒæÆVæwFâ°¢6öç7BFFU&ævRÒFWFV7DFFU&ævR° ¢òò7&V"FöF÷2Æ÷2FV×2FR&öw&W6ð¢6öç7B&öw&W74FV×2ÒFö7VÖVçBævWDVÆVÖVçD'Bw&öw&W74FV×2r°¢&öw&W74FV×2æææW$DÔÂÒrs°¢GW2æf÷$V6gVæ7FöâB°¢FE&öw&W74FVÒBÂÄ$TÅôÔ·EÒÂ'6VDFF·EÒæÆVæwFçFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ2VæFVçFW2r°¢Ò°¢FE&öw&W74FVÒv6Æ2rÂt6Æ7VÆ"&öGV7FfFBF&rÂtW7W&æFò6&vFRFF÷2âââr°¢FE&öw&W74FVÒv6ÆVârÂtÆ×W¦FRFFçFwVã"ÖW6W2rÂtW7W&æFò6Æ7VÆòâââr° ¢ÆWBF÷FÄç6W'FVBÒÂF÷FÄW'&÷'2Ò°¢6öç7B&W7VÇG2Ò·Ó° ¢òò)H)H4ò¢7V&"&6f÷26öâvæ÷&RÖGWÆ6FW2)H)H)H)H)H)H)H)H)H)H ¢f÷"6öç7BGRöbGW2°¢6öç7BF&ÆRÒD$ÄUôÔ·GUÓ°¢6öç7BFFÒ'6VDFF·GUÓ°¢6öç7BF÷FÂÒFFæÆVæwF°¢ÆWBç6W'FVBÒÂW'&÷'2Ò° ¢6WE&öw&W757FFRGRÂw'VææærrÂu7V&VæFòr²F&ÆR²rââârÂ°¢ÆörvæfòrÂu7V&VæFòr²Ä$TÅôÔ·GUÒ²s¢r²F÷FÂçFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ2âââr° ¢f÷"ÆWBÒ²ÂF÷FÃ²³Ò$D4õ4¤R°¢6öç7B&F6ÒFFç6Æ6RÂ²$D4õ4¤R°¢G'°¢6öç7B&W7öç6RÒvBfWF65U$4UõU$Â²r÷&W7B÷còr²Væ6öFUU$6ö×öæVçBF&ÆRÂ°¢ÖWFöC¢uõ5BrÀ¢VFW'3¢°¢t6öçFVçBÕGRs¢vÆ6Föâö§6öârÀ¢v¶Ws¢5U$4Uô´UÀ¢tWF÷&¦Föâs¢t&V&W"r²5U$4Uô´UÀ¢u&VfW"s¢w&W6öÇWFöãÖvæ÷&RÖGWÆ6FW2Ç&WGW&ãÖÖæÖÂrÀ¢ÒÀ¢&öG¢¥4ôâç7G&ævg&F6À¢Ò°¢b&W7öç6Ræö²°¢6öç7BW'%FWBÒvB&W7öç6RçFWB°¢F&÷ræWrW'&÷"tEEr²&W7öç6Rç7FGW2²s¢r²W'%FWBç7V'7G&ærÂ#°¢Ð¢ç6W'FVB³Ò&F6æÆVæwF°¢Ò6F6W'"°¢W'&÷'2³Ò&F6æÆVæwF°¢ÆörvW'&÷"rÂtW'&÷"Æ÷FRr²ÖFæfÆö÷"ô$D4õ4¤R³²rFRr²Ä$TÅôÔ·GUÒ²s¢r²W'"æÖW76vR°¢Ð¢6öç7B7BÒÖFç&÷VæBç6W'FVB²W'&÷'2òF÷FÂ¢°¢6WE&öw&W757FFRGRÂw'VææærrÀ¢ç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²r&ö6W6F2r²W'&÷'2âòrÂr²W'&÷'2çFôÆö6ÆU7G&ærvW2Ô4Âr²rW'&÷&W2r¢rrÀ¢7B°¢Ð ¢bW'&÷'2ÓÓÒ°¢6WE&öw&W757FFRGRÂvFöæRrÂç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ2&ö6W6F2GWÆ6F÷2væ÷&F÷2WFöÖF6ÖVçFRrÂ°¢Æörw7V66W72rÂÄ$TÅôÔ·GUÒ²s¢r²ç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ2&ö6W6F26÷'&V7FÖVçFRr°¢ÒVÇ6R°¢6WE&öw&W757FFRGRÂvW'&÷"rÂç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²rö²Âr²W'&÷'2çFôÆö6ÆU7G&ærvW2Ô4Âr²rW'&÷&W2rÂ°¢ÆörvW'&÷"rÂÄ$TÅôÔ·GUÒ²s¢r²W'&÷'2çFôÆö6ÆU7G&ærvW2Ô4Âr²rfÆ26öâW'&÷"r°¢Ð ¢F÷FÄç6W'FVB³Òç6W'FVC²F÷FÄW'&÷'2³ÒW'&÷'3°¢&W7VÇG5·GUÒÒ²ç6W'FVBÂW'&÷'2Ó° ¢òòÆörFR6&v¢bç6W'FVBâ°¢G'°¢vBfWF65U$4UõU$Â²r÷&W7B÷còr²Væ6öFUU$6ö×öæVçBs2ÖÆöuö6&v2rÂ°¢ÖWFöC¢uõ5BrÀ¢VFW'3¢²t6öçFVçBÕGRs¢vÆ6Föâö§6öârÂv¶Ws¢5U$4Uô´UÂtWF÷&¦Föâs¢t&V&W"r²5U$4Uô´UÂu&VfW"s¢w&WGW&ãÖÖæÖÂrÒÀ¢&öG¢¥4ôâç7G&ævg°¢&6fó¢fÆW5·GUÒòfÆW5·GUÒææÖR¢vFW66öæö6FòrÀ¢FõöFF¢GRÀ¢&Vv7G&÷3¢ç6W'FVBÀ¢6VÖæö6&v¢Fö7VÖVçBævWDVÆVÖVçD'Bw6VÖæ6&vrçfÇVRÇÂçVÆÂÀ¢ÒÀ¢Ò°¢Ò6F6R·Ð¢Ð¢Ð ¢òò)H)H4ò#¢6Æ7VÆ"&öGV7FfFBWFöÖF6ÖVçFR)H)H)H)H)H)H)H)H ¢ÆWB&öD6÷VçBÒ°¢bFFU&ævRbbF÷FÄç6W'FVBâ°¢6WE&öw&W757FFRv6Æ2rÂw'VææærrÂt6Æ7VÆæFòFVÂr²FFU&ævRæFW6FR²rÂr²FFU&ævRæ7F²rââârÂS°¢ÆörvæfòrÂt6Æ7VÆæFò&öGV7FfFBF&FVÂr²FFU&ævRæFW6FR²rÂr²FFU&ævRæ7F²râââr°¢G'°¢6öç7B&W7VÇBÒvB6ÆÅ%2vfåó5öwV&F%÷&öGV7FfFBrÂ°¢öfV6öFW6FS¢FFU&ævRæFW6FRÀ¢öfV6ö7F¢FFU&ævRæ7F¢Ò°¢&öD6÷VçBÒ&W7VÇBÇÂ°¢6WE&öw&W757FFRv6Æ2rÂvFöæRrÂ&öD6÷VçB²r&Vv7G&÷2FR&öGV7FfFBwV&FF÷2VâF&ÆfæÂrÂ°¢Æörw7V66W72rÂu&öGV7FfFB6Æ7VÆF¢r²&öD6÷VçB²r&Vv7G&÷2÷W&&òöFwV&FF÷2r°¢Ò6F6W'"°¢6WE&öw&W757FFRv6Æ2rÂvW'&÷"rÂtW'&÷#¢r²W'"æÖW76vRÂ°¢ÆörvW'&÷"rÂtW'&÷"6Æ7VÆæFò&öGV7FfFC¢r²W'"æÖW76vR°¢Ð¢ÒVÇ6RbF÷FÄç6W'FVBÓÓÒ°¢6WE&öw&W757FFRv6Æ2rÂvFöæRrÂu6âFF÷2çVWf÷2ÂæFVR6Æ7VÆ"rÂ°¢ÆörvæfòrÂtæò6Rç6W'F&öâFF÷2çVWf÷2Â6RöÖFR6Æ7VÆòFR&öGV7FfFBr°¢ÒVÇ6R°¢6WE&öw&W757FFRv6Æ2rÂvW'&÷"rÂtæò6RVFòFWFV7F"&ævòFRfV62rÂ°¢ÆörvW'&÷"rÂtæò6RFWFV7Fò&ævòFRfV62VâÆ÷2FF÷27V&F÷2r°¢Ð ¢òò)H)H4ò3¢Æ×W¦FRFFçFwV)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H ¢6WE&öw&W757FFRv6ÆVârÂw'VææærrÂtVÆÖææFò7F÷&Â7'VFòÖ÷""ÖW6W2ââârÂS°¢ÆörvæfòrÂtV¦V7WFæFòÆ×W¦FRFF7'VFÖ÷""ÖW6W2âââr°¢G'°¢6öç7B6ÆVå&W7VÇBÒvB6ÆÅ%2vfåó5öÆ×%ö7F÷&ÅöçFwVòr°¢6öç7B6¦4VÆÒÒ6ÆVå&W7VÇBæ6¦5öVÆÖæF2ÇÂ°¢6öç7BFW7DVÆÒÒ6ÆVå&W7VÇBæFW7FæõöVÆÖæF2ÇÂ°¢6öç7BF÷FÄVÆÒÒ6¦4VÆÒ²FW7DVÆÓ°¢bF÷FÄVÆÒâ°¢6WE&öw&W757FFRv6ÆVârÂvFöæRrÀ¢6¦4VÆÒçFôÆö6ÆU7G&ærvW2Ô4Âr²r6¦2²r²FW7DVÆÒçFôÆö6ÆU7G&ærvW2Ô4Âr²rFW7FæòVÆÖæF2çFW2FRr²6ÆVå&W7VÇBæfV6öÆÖFR²rrÂ°¢Æörw7V66W72rÂtÆ×W¦¢r²F÷FÄVÆÒçFôÆö6ÆU7G&ærvW2Ô4Âr²r&Vv7G&÷2çFwV÷2VÆÖæF÷2fV6ÆÖFS¢r²6ÆVå&W7VÇBæfV6öÆÖFR²rr°¢ÒVÇ6R°¢6WE&öw&W757FFRv6ÆVârÂvFöæRrÂu6â&Vv7G&÷2çFwV÷2VRVÆÖæ"rÂ°¢ÆörvæfòrÂtÆ×W¦¢æò&&Vv7G&÷2Ö÷&W2"ÖW6W2r°¢Ð¢Ò6F6W'"°¢6WE&öw&W757FFRv6ÆVârÂvW'&÷"rÂtW'&÷#¢r²W'"æÖW76vRÂ°¢ÆörvW'&÷"rÂtW'&÷"VâÆ×W¦¢r²W'"æÖW76vR°¢Ð ¢òò)H)H$U5TÔTâdäÂ)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H ¢6öç7B7VÖÖ'ÒFö7VÖVçBævWDVÆVÖVçD'Bw7VÖÖ'6&Br°¢7VÖÖ'æ6Æ74Æ7BæFBwf6&ÆRr°¢bF÷FÄW'&÷'2â7VÖÖ'æ6Æ74Æ7BæFBv2ÖW'&÷'2r°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7VÖÖ'FFÆRrçFWD6öçFVçBÒF÷FÄW'&÷'2âòu&ö6W6ò6ö×ÆWFFò6öâW'&÷&W2r¢u&ö6W6ò6ö×ÆWFFòWF÷6ÖVçFRs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7VÖÖ'7FG2ræææW$DÔÂÐ¢sÆFb6Æ73Ò'7VÖÖ'×7FB#ãÆFb6Æ73Ò'7VÖÖ'×7FB×fÇVR#âr²F÷FÄç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²sÂöFcãÆFb6Æ73Ò'7VÖÖ'×7FBÖÆ&VÂ#æfÆ2&ö6W6F3ÂöFcãÂöFcâr°¢F÷FÄW'&÷'2âòsÆFb6Æ73Ò'7VÖÖ'×7FB#ãÆFb6Æ73Ò'7VÖÖ'×7FB×fÇVR"7GÆSÒ&6öÆ÷#§f"ÒÖW'&÷"#âr²F÷FÄW'&÷'2çFôÆö6ÆU7G&ærvW2Ô4Âr²sÂöFcãÆFb6Æ73Ò'7VÖÖ'×7FBÖÆ&VÂ#æfÆ26öâW'&÷#ÂöFcãÂöFcâr¢rr°¢&öD6÷VçBâòsÆFb6Æ73Ò'7VÖÖ'×7FB#ãÆFb6Æ73Ò'7VÖÖ'×7FB×fÇVR"7GÆSÒ&6öÆ÷#§f"Ò×7V66W72#âr²&öD6÷VçB²sÂöFcãÆFb6Æ73Ò'7VÖÖ'×7FBÖÆ&VÂ#ç&öGV7FfFFW26Æ7VÆF3ÂöFcãÂöFcâr¢rr°¢ö&¦V7BæVçG&W2&W7VÇG2æÖgVæ7FöâVçG'°¢&WGW&âsÆFb6Æ73Ò'7VÖÖ'×7FB#ãÆFb6Æ73Ò'7VÖÖ'×7FB×fÇVR#âr²VçG'³Òæç6W'FVBçFôÆö6ÆU7G&ærvW2Ô4Âr²sÂöFcãÆFb6Æ73Ò'7VÖÖ'×7FBÖÆ&VÂ#âr²Ä$TÅôÔ¶VçG'³ÕÒ²sÂöFcãÂöFcâs°¢Òæ¦öârr° ¢WÆöFærÒfÇ6S°¢'Fâæ6Æ74Æ7Bç&VÖ÷fRwWÆöFærr²'FâçFWD6öçFVçBÒu7V&"6Æ7VÆ"s²'FâæF6&ÆVBÒG'VS°¢f÷"6öç7BBöbGW2²fÆW5·EÒÒçVÆÃ²'6VDFF·EÒÒçVÆÃ²Ð¢WFFTfÆT6÷VçB°§Ð ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òòÄôp¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦gVæ7FöâÆörGRÂÖW76vR°¢6öç7BVÂÒFö7VÖVçBævWDVÆVÖVçD'BvÆötVçG&W2r°¢6öç7Bæ÷rÒæWrFFRçFôÆö6ÆUFÖU7G&ærvW2Ô4Âr°¢6öç7BVçG'ÒFö7VÖVçBæ7&VFTVÆVÖVçBvFbr°¢VçG'æ6Æ74æÖRÒvÆörÖVçG'r²GS°¢VçG'æææW$DÔÂÒsÇ7â6Æ73Ò'FÖW7F×#å²r²æ÷r²uÓÂ÷7ãâr²ÖW76vS°¢VÂæç6W'D&Vf÷&RVçG'ÂVÂæf'7D6ÆB°§Ð ¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¢òò4ôääT5Dôâ4T4°¢òòÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÓÐ¦7æ2gVæ7Föâ6V6´6öææV7Föâ°¢G'°¢6öç7B"ÒvBfWF65U$4UõU$Â²r÷&W7B÷còr²Væ6öFUU$6ö×öæVçBs2Ö÷W&&÷2r²s÷6VÆV7CÖBfÆÖCÓrÂ°¢VFW'3¢²v¶Ws¢5U$4Uô´UÂtWF÷&¦Föâs¢t&V&W"r²5U$4Uô´UÐ¢Ò°¢b"æö²°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FGW4F÷Bræ6Æ74æÖRÒw7FGW2ÖF÷Bs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FGW5FWBrçFWD6öçFVçBÒt6öæV7FFò7W&6Rs°¢Æörw7V66W72rÂt6öæWöâ7W&6RfW&f6Fr°¢ÒVÇ6RF&÷ræWrW'&÷"tEEr²"ç7FGW2°¢Ò6F6R°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FGW4F÷Bræ6Æ74æÖRÒw7FGW2ÖF÷BF66öææV7FVBs°¢Fö7VÖVçBævWDVÆVÖVçD'Bw7FGW5FWBrçFWD6öçFVçBÒu6â6öæWöâs°¢ÆörvW'&÷"rÂtæò6RVFò6öæV7F"7W&6S¢r²RæÖW76vR°¢Ð§Ð¦6V6´6öææV7Föâ° ¢òòWFòÖfÆÂ6VÖæ6&v¦6öç7BÖöçF2Ò²tVæW&òrÂtfV'&W&òrÂtÖ'¦òrÂt'&ÂrÂtÖòrÂt§VæòrÂt§VÆòrÂtv÷7FòrÂu6WFVÖ'&RrÂtö7GV'&RrÂtæ÷fVÖ'&RrÂtF6VÖ'&RuÓ°¦Fö7VÖVçBævWDVÆVÖVçD'Bw6VÖæ6&vrçfÇVRÒÖöçF5¶æWrFFRævWDÖöçFÒ²rr²æWrFFRævWDgVÆÅV"°£Â÷67&Cà£Âö&öGà£ÂöFÖÃà
+        /* Summary */
+        .summary-card { background: var(--white); border-radius: 12px; border-left: 4px solid var(--success); padding: 20px 24px; margin-bottom: 20px; display: none; }
+        .summary-card.visible { display: block; }
+        .summary-card.has-errors { border-left-color: var(--warning); }
+        .summary-title { font-size: 16px; font-weight: 700; color: var(--success); margin-bottom: 10px; }
+        .summary-card.has-errors .summary-title { color: var(--warning); }
+        .summary-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+        .summary-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--navy); }
+        .summary-stat-label { font-size: 11px; color: var(--slate); }
+
+        /* Log */
+        .log-section { background: var(--white); border-radius: 12px; padding: 24px; }
+        .log-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .log-entries { max-height: 250px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8; color: var(--slate); }
+        .log-entry.success { color: var(--success); }
+        .log-entry.error { color: var(--error); }
+        .log-entry.info { color: var(--navy); }
+        .log-entry .timestamp { color: var(--silver); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 16px; height: 16px; border: 2px solid var(--ice-grey); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+
+        /* Info box */
+        .info-box { background: rgba(25,40,83,0.04); border: 1px solid rgba(25,40,83,0.12); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 12px; color: var(--slate); line-height: 1.6; }
+        .info-box strong { color: var(--navy); }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-left">
+        <div class="header-logo">TL</div>
+        <h1>Trailer Logistics</h1>
+    </div>
+    <div class="header-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Conectando...</span>
+    </div>
+</div>
+
+<div class="main">
+    <h2 class="page-title">Carga de Datos de Productividad</h2>
+    <p class="page-subtitle">Sube los archivos Excel del WMS — la productividad se calcula y almacena automaticamente</p>
+
+    <div class="info-box">
+        <strong>Proceso automatico:</strong> Al subir los archivos, el sistema: 1) Carga los datos (ignorando duplicados), 2) Calcula y guarda la productividad diaria por operario, 3) Limpia data cruda mayor a 2 meses.<br>
+        Si subes el mismo archivo dos veces, no se duplica nada.
+    </div>
+
+    <!-- Semana Carga -->
+    <div class="semana-section">
+        <label>Identificador de carga:</label>
+        <input type="text" class="semana-input" id="semanaCarga" placeholder="ej: Marzo 2026">
+        <span class="semana-hint">Nombre del periodo que estas subiendo</span>
+    </div>
+
+    <!-- Upload Cards: solo CAJAS y DESTINO -->
+    <div class="upload-grid">
+        <div class="upload-card" id="cardCajas" ondragover="handleDragOver(event,'cajas')" ondragleave="handleDragLeave(event,'cajas')" ondrop="handleDrop(event,'cajas')">
+            <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20"/><path d="M9 21V9"/></svg>
+            </div>
+            <div class="card-label">Tabla: 3-historial_cajas</div>
+            <div class="card-title">Historial LPN Cajas</div>
+            <div class="card-desc" id="descCajas">Arrastra el Excel o haz click para seleccionar</div>
+            <div class="card-filename" id="filenameCajas"></div>
+            <div class="card-stats" id="statsCajas"></div>
+            <div class="card-stats-label" id="statsLabelCajas"></div>
+            <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'cajas')">
+            <button class="remove-btn" id="removeCajas" style="display:none" onclick="removeFile(event,'cajas')">&#10005;</button>
+        </div>
+
+        <div class="upload-card" id="cardDestino" ondragover="handleDragOver(event,'destino')" ondragleave="handleDragLeave(event,'destino')" ondrop="handleDrop(event,'destino')">
+            <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="card-label">Tabla: 3-historial_destino</div>
+            <div class="card-title">Historial LPN Destino</div>
+            <div class="card-desc" id="descDestino">Arrastra el Excel o haz click para seleccionar</div>
+            <div class="card-filename" id="filenameDestino"></div>
+            <div class="card-stats" id="statsDestino"></div>
+            <div class="card-stats-label" id="statsLabelDestino"></div>
+            <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'destino')">
+            <button class="remove-btn" id="removeDestino" style="display:none" onclick="removeFile(event,'destino')">&#10005;</button>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div class="file-count" id="fileCount">Ningun archivo seleccionado</div>
+        <button class="btn-upload" id="btnUpload" disabled onclick="startUpload()">Subir y Calcular</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section" id="progressSection">
+        <div class="progress-title">Progreso del proceso</div>
+        <div id="progressItems"></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card" id="summaryCard">
+        <div class="summary-title" id="summaryTitle"></div>
+        <div class="summary-stats" id="summaryStats"></div>
+    </div>
+
+    <!-- Log -->
+    <div class="log-section">
+        <div class="log-title">
+            <span>Registro de actividad</span>
+            <button onclick="document.getElementById('logEntries').innerHTML=''" style="border:none;background:none;color:var(--silver);cursor:pointer;font-size:11px;">Limpiar</button>
+        </div>
+        <div class="log-entries" id="logEntries"></div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURACION SUPABASE
+// ============================================================
+const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbXB1eWpvaWRleHJncG5vdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjYxOTQsImV4cCI6MjA4ODc0MjE5NH0.F8QeJldEz8QLBkbtCZ6a78zK27iSDnpgNqtnJLDuWN4';
+const BATCH_SIZE = 400;
+
+// ============================================================
+// MAPEO DE COLUMNAS EXCEL -> SUPABASE
+// ============================================================
+const COLUMN_MAP = {
+    cajas: {
+        'ID LPN': 'id_lpn',
+        'PRODUCTO': 'producto',
+        'EMPRESA PROD': 'empresa_prod',
+        'UBICACION': 'ubicacion',
+        'UBICACION PREV.': 'ubicacion_prev',
+        'UBICACION PREV': 'ubicacion_prev',
+        'FECHA MOD.': 'fecha_mod',
+        'FECHA MOD': 'fecha_mod',
+        'USUARIO ULT MOD.': 'usuario',
+        'USUARIO ULT MOD': 'usuario',
+        'MAR. QA': 'mar_qa',
+        'MAR QA': 'mar_qa',
+    },
+    destino: {
+        'ID LPN': 'id_lpn',
+        'PRODUCTO': 'producto',
+        'EMPRESA PROD': 'empresa_prod',
+        'UBIC ACT.': 'ubic_actual',
+        'UBIC ACT': 'ubic_actual',
+        'UBIC ANT.': 'ubic_anterior',
+        'UBIC ANT': 'ubic_anterior',
+        'FECHA ULT MOD': 'fecha_mod',
+        'FECHA ULT MOD.': 'fecha_mod',
+        'USUARIO ULTIMA MOD': 'usuario',
+        'USUARIO ULTIMA MOD.': 'usuario',
+    }
+};
+
+const TABLE_MAP = {
+    cajas: '3-historial_cajas',
+    destino: '3-historial_destino',
+};
+const LABEL_MAP = {
+    cajas: 'Historial LPN Cajas',
+    destino: 'Historial LPN Destino',
+};
+const CARD_MAP = {
+    cajas: 'cardCajas',
+    destino: 'cardDestino',
+};
+const CAP_MAP = { cajas: 'Cajas', destino: 'Destino' };
+
+// ============================================================
+// STATE
+// ============================================================
+let files = { cajas: null, destino: null };
+let parsedData = { cajas: null, destino: null };
+let uploading = false;
+
+// ============================================================
+// DRAG & DROP / FILE SELECT
+// ============================================================
+function handleDragOver(e, type) { e.preventDefault(); document.getElementById(CARD_MAP[type]).classList.add('dragover'); }
+function handleDragLeave(e, type) { e.preventDefault(); document.getElementById(CARD_MAP[type]).classList.remove('dragover'); }
+function handleDrop(e, type) {
+    e.preventDefault();
+    document.getElementById(CARD_MAP[type]).classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) processFile(file, type);
+}
+function handleFile(e, type) { const file = e.target.files[0]; if (file) processFile(file, type); }
+
+function removeFile(e, type) {
+    e.preventDefault(); e.stopPropagation();
+    files[type] = null; parsedData[type] = null;
+    const c = CAP_MAP[type];
+    document.getElementById(CARD_MAP[type]).classList.remove('has-file');
+    document.getElementById('filename'+c).textContent = '';
+    document.getElementById('stats'+c).textContent = '';
+    document.getElementById('statsLabel'+c).textContent = '';
+    document.getElementById('desc'+c).style.display = '';
+    document.getElementById('remove'+c).style.display = 'none';
+    document.getElementById(CARD_MAP[type]).querySelector('input[type="file"]').value = '';
+    updateFileCount();
+    log('info', 'Archivo removido de ' + LABEL_MAP[type]);
+}
+
+function processFile(file, type) {
+    files[type] = file;
+    log('info', 'Leyendo ' + file.name + '...');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array', cellDates: true });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(ws, { defval: null });
+
+            const mapped = mapColumns(json, type);
+            parsedData[type] = mapped;
+
+            const c = CAP_MAP[type];
+            document.getElementById(CARD_MAP[type]).classList.add('has-file');
+            document.getElementById('filename'+c).textContent = file.name;
+            document.getElementById('stats'+c).textContent = mapped.length.toLocaleString('es-CL');
+            document.getElementById('statsLabel'+c).textContent = 'filas detectadas';
+            document.getElementById('desc'+c).style.display = 'none';
+            document.getElementById('remove'+c).style.display = 'flex';
+
+            log('success', file.name + ': ' + mapped.length.toLocaleString('es-CL') + ' filas listas');
+            updateFileCount();
+        } catch (err) {
+            log('error', 'Error leyendo ' + file.name + ': ' + err.message);
+            files[type] = null;
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function mapColumns(rows, type) {
+    const colMap = COLUMN_MAP[type];
+    const semanaCarga = document.getElementById('semanaCarga').value || 'sin-etiqueta';
+
+    return rows.map(row => {
+        const mapped = {};
+        for (const [excelCol, dbCol] of Object.entries(colMap)) {
+            if (row[excelCol] !== undefined && row[excelCol] !== null && !mapped[dbCol]) {
+                let val = row[excelCol];
+
+                // Fecha -> ISO string
+                if (dbCol === 'fecha_mod' && val) {
+                    if (val instanceof Date) {
+                        val = val.toISOString();
+                    } else if (typeof val === 'string' && !val.includes('T')) {
+                        try { val = new Date(val).toISOString(); } catch(e) {}
+                    }
+                }
+
+                // Strings
+                if (['id_lpn','usuario','producto','empresa_prod','ubicacion','ubicacion_prev','ubic_actual','ubic_anterior','mar_qa'].includes(dbCol) && val !== null) {
+                    val = String(val).trim();
+                }
+
+                mapped[dbCol] = val;
+            }
+        }
+        mapped.semana_carga = semanaCarga;
+        return mapped;
+    }).filter(row => {
+        // Solo filas con datos clave
+        return row.id_lpn && row.fecha_mod && row.usuario;
+    });
+}
+
+function updateFileCount() {
+    const count = Object.values(parsedData).filter(d => d && d.length > 0).length;
+    const totalRows = Object.values(parsedData).reduce((sum, d) => sum + (d ? d.length : 0), 0);
+    const el = document.getElementById('fileCount');
+    if (count === 0) {
+        el.innerHTML = 'Ningun archivo seleccionado';
+    } else {
+        el.innerHTML = '<strong>' + count + '</strong> archivo' + (count > 1 ? 's' : '') +
+            ' con <strong>' + totalRows.toLocaleString('es-CL') + '</strong> filas en total';
+    }
+    document.getElementById('btnUpload').disabled = count === 0 || uploading;
+}
+
+// ============================================================
+// HELPERS: RPC + PROGRESS
+// ============================================================
+
+// Llamar funcion RPC de Supabase
+async function callRPC(fnName, params = {}) {
+    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fnName, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+        },
+        body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error('RPC ' + fnName + ' HTTP ' + response.status + ': ' + errText.substring(0, 300));
+    }
+    return response.json();
+}
+
+// Detectar rango de fechas de los datos parseados
+function detectDateRange() {
+    let minDate = null, maxDate = null;
+    for (const type of Object.keys(parsedData)) {
+        if (!parsedData[type]) continue;
+        for (const row of parsedData[type]) {
+            if (!row.fecha_mod) continue;
+            const d = new Date(row.fecha_mod);
+            if (!isNaN(d)) {
+                if (!minDate || d < minDate) minDate = d;
+                if (!maxDate || d > maxDate) maxDate = d;
+            }
+        }
+    }
+    if (minDate && maxDate) {
+        return {
+            desde: minDate.toISOString().split('T')[0],
+            hasta: maxDate.toISOString().split('T')[0],
+        };
+    }
+    return null;
+}
+
+// Crear item de progreso dinamicamente
+function addProgressItem(id, name, detail) {
+    const container = document.getElementById('progressItems');
+    const html = '<div class="progress-item" id="prog-' + id + '">' +
+        '<div class="progress-icon pending" id="progIcon-' + id + '">&#9633;</div>' +
+        '<div class="progress-info">' +
+            '<div class="progress-name">' + name + '</div>' +
+            '<div class="progress-detail" id="progDetail-' + id + '">' + detail + '</div>' +
+        '</div>' +
+        '<div class="progress-bar-container"><div class="progress-bar-fill" id="progBar-' + id + '"></div></div>' +
+        '<div class="progress-pct" id="progPct-' + id + '">—</div>' +
+    '</div>';
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+// Actualizar estado de un item de progreso
+function setProgressState(id, state, detail, pct) {
+    const icon = document.getElementById('progIcon-' + id);
+    const bar = document.getElementById('progBar-' + id);
+    const detailEl = document.getElementById('progDetail-' + id);
+    const pctEl = document.getElementById('progPct-' + id);
+    if (state === 'running') {
+        icon.className = 'progress-icon running';
+        icon.innerHTML = '<div class="spinner"></div>';
+    } else if (state === 'done') {
+        icon.className = 'progress-icon done'; icon.textContent = '\u2713';
+        if (bar) bar.classList.add('done');
+    } else if (state === 'error') {
+        icon.className = 'progress-icon error'; icon.textContent = '!';
+        if (bar) bar.classList.add('error');
+    }
+    if (detail && detailEl) detailEl.textContent = detail;
+    if (bar && pct !== undefined) bar.style.width = pct + '%';
+    if (pctEl && pct !== undefined) pctEl.textContent = pct + '%';
+}
+
+// ============================================================
+// UPLOAD + AUTO-CALCULO + LIMPIEZA (proceso completo)
+// ============================================================
+async function startUpload() {
+    if (uploading) return;
+    uploading = true;
+
+    const btn = document.getElementById('btnUpload');
+    btn.disabled = true; btn.classList.add('uploading'); btn.textContent = 'Procesando...';
+
+    const progressSection = document.getElementById('progressSection');
+    progressSection.classList.add('visible');
+    document.getElementById('summaryCard').classList.remove('visible', 'has-errors');
+
+    const types = Object.keys(parsedData).filter(t => parsedData[t] && parsedData[t].length > 0);
+    const dateRange = detectDateRange();
+
+    // Crear todos los items de progreso
+    const progressItems = document.getElementById('progressItems');
+    progressItems.innerHTML = '';
+    types.forEach(function(t) {
+        addProgressItem(t, LABEL_MAP[t], parsedData[t].length.toLocaleString('es-CL') + ' filas pendientes');
+    });
+    addProgressItem('calc', 'Calcular productividad diaria', 'Esperando carga de datos...');
+    addProgressItem('clean', 'Limpieza de data antigua (>2 meses)', 'Esperando calculo...');
+
+    let totalInserted = 0, totalErrors = 0;
+    const results = {};
+
+    // ── PASO 1: Subir archivos con ignore-duplicates ──────────
+    for (const type of types) {
+        const table = TABLE_MAP[type];
+        const data = parsedData[type];
+        const total = data.length;
+        let inserted = 0, errors = 0;
+
+        setProgressState(type, 'running', 'Subiendo a ' + table + '...', 0);
+        log('info', 'Subiendo ' + LABEL_MAP[type] + ': ' + total.toLocaleString('es-CL') + ' filas...');
+
+        for (let i = 0; i < total; i += BATCH_SIZE) {
+            const batch = data.slice(i, i + BATCH_SIZE);
+            try {
+                const response = await fetch(SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Prefer': 'resolution=ignore-duplicates,return=minimal',
+                    },
+                    body: JSON.stringify(batch),
+                });
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error('HTTP ' + response.status + ': ' + errText.substring(0, 200));
+                }
+                inserted += batch.length;
+            } catch (err) {
+                errors += batch.length;
+                log('error', 'Error lote ' + (Math.floor(i/BATCH_SIZE)+1) + ' de ' + LABEL_MAP[type] + ': ' + err.message);
+            }
+            const pct = Math.round(((inserted + errors) / total) * 100);
+            setProgressState(type, 'running',
+                inserted.toLocaleString('es-CL') + ' procesadas' + (errors > 0 ? ' | ' + errors.toLocaleString('es-CL') + ' errores' : ''),
+                pct);
+        }
+
+        if (errors === 0) {
+            setProgressState(type, 'done', inserted.toLocaleString('es-CL') + ' filas procesadas (duplicados ignorados automaticamente)', 100);
+            log('success', LABEL_MAP[type] + ': ' + inserted.toLocaleString('es-CL') + ' filas procesadas correctamente');
+        } else {
+            setProgressState(type, 'error', inserted.toLocaleString('es-CL') + ' ok, ' + errors.toLocaleString('es-CL') + ' errores', 100);
+            log('error', LABEL_MAP[type] + ': ' + errors.toLocaleString('es-CL') + ' filas con error');
+        }
+
+        totalInserted += inserted; totalErrors += errors;
+        results[type] = { inserted, errors };
+
+        // Log de carga
+        if (inserted > 0) {
+            try {
+                await fetch(SUPABASE_URL + '/rest/v1/' + encodeURIComponent('3-log_cargas'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({
+                        archivo: files[type] ? files[type].name : 'desconocido',
+                        tipo_data: type,
+                        registros: inserted,
+                        semana_carga: document.getElementById('semanaCarga').value || null,
+                    }),
+                });
+            } catch(e) {}
+        }
+    }
+
+    // ── PASO 2: Calcular productividad automaticamente ────────
+    let prodCount = 0;
+    if (dateRange && totalInserted > 0) {
+        setProgressState('calc', 'running', 'Calculando del ' + dateRange.desde + ' al ' + dateRange.hasta + '...', 50);
+        log('info', 'Calculando productividad diaria del ' + dateRange.desde + ' al ' + dateRange.hasta + '...');
+        try {
+            const result = await callRPC('fn_3_guardar_productividad', {
+                p_fecha_desde: dateRange.desde,
+                p_fecha_hasta: dateRange.hasta
+            });
+            prodCount = result || 0;
+            setProgressState('calc', 'done', prodCount + ' registros de productividad guardados en tabla final', 100);
+            log('success', 'Productividad calculada: ' + prodCount + ' registros operario/dia guardados');
+        } catch (err) {
+            setProgressState('calc', 'error', 'Error: ' + err.message, 100);
+            log('error', 'Error calculando productividad: ' + err.message);
+        }
+    } else if (totalInserted === 0) {
+        setProgressState('calc', 'done', 'Sin datos nuevos, nada que calcular', 100);
+        log('info', 'No se insertaron datos nuevos, se omite calculo de productividad');
+    } else {
+        setProgressState('calc', 'error', 'No se pudo detectar rango de fechas', 100);
+        log('error', 'No se detecto rango de fechas en los datos subidos');
+    }
+
+    // ── PASO 3: Limpieza de data antigua ──────────────────────
+    setProgressState('clean', 'running', 'Eliminando historial crudo mayor a 2 meses...', 50);
+    log('info', 'Ejecutando limpieza de data cruda mayor a 2 meses...');
+    try {
+        const cleanResult = await callRPC('fn_3_limpiar_historial_antiguo');
+        const cajasElim = cleanResult.cajas_eliminadas || 0;
+        const destElim = cleanResult.destino_eliminadas || 0;
+        const totalElim = cajasElim + destElim;
+        if (totalElim > 0) {
+            setProgressState('clean', 'done',
+                cajasElim.toLocaleString('es-CL') + ' cajas + ' + destElim.toLocaleString('es-CL') + ' destino eliminadas (antes de ' + cleanResult.fecha_limite + ')', 100);
+            log('success', 'Limpieza: ' + totalElim.toLocaleString('es-CL') + ' registros antiguos eliminados (fecha limite: ' + cleanResult.fecha_limite + ')');
+        } else {
+            setProgressState('clean', 'done', 'Sin registros antiguos que eliminar', 100);
+            log('info', 'Limpieza: no habia registros mayores a 2 meses');
+        }
+    } catch (err) {
+        setProgressState('clean', 'error', 'Error: ' + err.message, 100);
+        log('error', 'Error en limpieza: ' + err.message);
+    }
+
+    // ── RESUMEN FINAL ─────────────────────────────────────────
+    const summary = document.getElementById('summaryCard');
+    summary.classList.add('visible');
+    if (totalErrors > 0) summary.classList.add('has-errors');
+    document.getElementById('summaryTitle').textContent = totalErrors > 0 ? 'Proceso completado con errores' : 'Proceso completado exitosamente';
+    document.getElementById('summaryStats').innerHTML =
+        '<div class="summary-stat"><div class="summary-stat-value">' + totalInserted.toLocaleString('es-CL') + '</div><div class="summary-stat-label">filas procesadas</div></div>' +
+        (totalErrors > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--error)">' + totalErrors.toLocaleString('es-CL') + '</div><div class="summary-stat-label">filas con error</div></div>' : '') +
+        (prodCount > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--success)">' + prodCount + '</div><div class="summary-stat-label">productividades calculadas</div></div>' : '') +
+        Object.entries(results).map(function(entry) {
+            return '<div class="summary-stat"><div class="summary-stat-value">' + entry[1].inserted.toLocaleString('es-CL') + '</div><div class="summary-stat-label">' + LABEL_MAP[entry[0]] + '</div></div>';
+        }).join('');
+
+    uploading = false;
+    btn.classList.remove('uploading'); btn.textContent = 'Subir y Calcular'; btn.disabled = true;
+    for (const t of types) { files[t] = null; parsedData[t] = null; }
+    updateFileCount();
+}
+
+// ============================================================
+// LOG
+// ============================================================
+function log(type, message) {
+    const el = document.getElementById('logEntries');
+    const now = new Date().toLocaleTimeString('es-CL');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    entry.innerHTML = '<span class="timestamp">[' + now + ']</span> ' + message;
+    el.insertBefore(entry, el.firstChild);
+}
+
+// ============================================================
+// CONNECTION CHECK
+// ============================================================
+async function checkConnection() {
+    try {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/' + encodeURIComponent('3-operarios') + '?select=id&limit=1', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        if (r.ok) {
+            document.getElementById('statusDot').className = 'status-dot';
+            document.getElementById('statusText').textContent = 'Conectado a Supabase';
+            log('success', 'Conexion a Supabase verificada');
+        } else throw new Error('HTTP ' + r.status);
+    } catch(e) {
+        document.getElementById('statusDot').className = 'status-dot disconnected';
+        document.getElementById('statusText').textContent = 'Sin conexion';
+        log('error', 'No se pudo conectar a Supabase: ' + e.message);
+    }
+}
+checkConnection();
+
+// Auto-fill semana carga
+const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+document.getElementById('semanaCarga').value = months[new Date().getMonth()] + ' ' + new Date().getFullYear();
+</script>
+</body>
+</html>

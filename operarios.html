@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operarios - Trailer Logistics</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #192853;
+            --royal: #0E245E;
+            --midnight: #010B24;
+            --white: #FFFEFF;
+            --ice-grey: #F2F2F5;
+            --silver: #AEAEB8;
+            --slate: #5E6373;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--ice-grey);
+            color: var(--navy);
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--midnight) 0%, var(--navy) 100%);
+            color: var(--white);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .logo-box {
+            background: var(--royal);
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border: 2px solid var(--white);
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex: 1;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: #FFD700;
+        }
+
+        nav a.active {
+            color: #FFD700;
+        }
+
+        nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #FFD700;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: var(--error);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main content */
+        main {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            color: var(--navy);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--silver);
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            background: var(--white);
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--royal);
+            box-shadow: 0 0 0 3px rgba(14, 36, 94, 0.1);
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--silver);
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            background: var(--white);
+            color: var(--navy);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--royal);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--royal);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--navy);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 36, 94, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--silver);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: var(--slate);
+        }
+
+        .btn-small {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--ice-grey);
+            border-bottom: 2px solid var(--silver);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--navy);
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s;
+        }
+
+        th:hover {
+            background: #E8E8EC;
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.5;
+        }
+
+        th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--ice-grey);
+            font-size: 0.95rem;
+        }
+
+        tbody tr:hover {
+            background: #FAFBFC;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #D1F4E5;
+            color: #065F46;
+        }
+
+        .status-active:hover {
+            background: #A7F3D0;
+        }
+
+        .status-inactive {
+            background: #FEE2E2;
+            color: #7F1D1D;
+        }
+
+        .status-inactive:hover {
+            background: #FECACA;
+        }
+
+        .status-dot-small {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--ice-grey);
+            color: var(--navy);
+        }
+
+        .action-btn:hover {
+            background: var(--silver);
+            transform: scale(1.1);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--ice-grey);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: var(--navy);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--slate);
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--navy);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--navy);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--silver);
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            color: var(--navy);
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--royal);
+            box-shadow: 0 0 0 3px rgba(14, 36, 94, 0.1);
+        }
+
+        .form-error {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        input.error,
+        select.error {
+            border-color: var(--error);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--ice-grey);
+            padding-top: 1rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 2000;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .toast.error {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--slate);
+        }
+
+        .spinner {
+            border: 3px solid var(--ice-grey);
+            border-top: 3px solid var(--royal);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--slate);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            nav {
+                order: 3;
+                width: 100%;
+                gap: 1rem;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .toast {
+                right: 1rem;
+                left: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="header-brand">
+                <div class="logo-box">TL</div>
+                <div class="header-title">TRAILER LOGISTICS</div>
+            </a>
+            <nav>
+                <a href="index.html">Carga</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="operarios.html" class="active">Operarios</a>
+            </nav>
+            <div class="connection-status">
+                <span id="connectionStatus">Conectando...</span>
+                <div class="status-dot" id="statusDot"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main>
+        <div class="page-header">
+            <h1>Gestión de Operarios</h1>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <input
+                type="text"
+                class="search-box"
+                id="searchInput"
+                placeholder="Buscar por nombre o usuario..."
+            >
+            <select class="filter-select" id="cargoFilter">
+                <option value="">Todos los cargos</option>
+            </select>
+            <button class="btn btn-primary" id="addOperarioBtn">
+                ➕ Agregar Operario
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <div id="tableContent"></div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal" id="operarioModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Operario</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <form id="operarioForm">
+                <div class="form-group">
+                    <label for="rutInput">RUT</label>
+                    <input
+                        type="text"
+                        id="rutInput"
+                        placeholder="ej: 14.444.633-K"
+                        required
+                    >
+                    <div class="form-error" id="rutError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="usuarioInput">Usuario</label>
+                    <input
+                        type="text"
+                        id="usuarioInput"
+                        placeholder="ej: JESPINOZA"
+                        required
+                    >
+                    <div class="form-error" id="usuarioError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombreInput">Nombre Completo</label>
+                    <input
+                        type="text"
+                        id="nombreInput"
+                        placeholder="ej: ESPINOZA MONTECINOS, JOSE LUIS"
+                        required
+                    >
+                    <div class="form-error" id="nombreError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cargoInput">Cargo</label>
+                    <select id="cargoInput" required>
+                        <option value="">Seleccionar cargo...</option>
+                        <option value="OPERADOR APILADOR">Operador Apilador</option>
+                        <option value="OPERADOR GRUA">Operador Grúa</option>
+                        <option value="OPERADOR GRUA DOBLE">Operador Grúa Doble</option>
+                        <option value="OPERADOR TRANSPALETA">Operador Transpaleta</option>
+                        <option value="RECEPCIONISTA Y DESPACHADOR (A)">Recepcionista y Despachador (A)</option>
+                    </select>
+                    <div class="form-error" id="cargoError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipoEquipoInput">Tipo de Equipo</label>
+                    <select id="tipoEquipoInput" required>
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="SIMPLE">Simple</option>
+                        <option value="DOBLE">Doble</option>
+                    </select>
+                    <div class="form-error" id="tipoEquipoError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="factorInput">Factor Ajustado</label>
+                    <input
+                        type="number"
+                        id="factorInput"
+                        step="0.01"
+                        min="0"
+                        value="1.0"
+                        required
+                    >
+                    <div class="form-error" id="factorError"></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="modalCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirmar acción</h2>
+                <button class="modal-close" id="confirmClose">&times;</button>
+            </div>
+            <p id="confirmMessage" style="margin-bottom: 2rem; color: var(--slate);">¿Está seguro?</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="confirmCancel">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmOk">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase config
+        const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbXB1eWpvaWRleHJncG5vdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjYxOTQsImV4cCI6MjA4ODc0MjE5NH0.F8QeJldEz8QLBkbtCZ6a78zK27iSDnpgNqtnJLDuWN4';
+        const TABLE_NAME = '3-operarios';
+
+        // State
+        let operarios = [];
+        let allOperarios = [];
+        let currentOperarioId = null;
+        let currentSort = { column: null, direction: 'asc' };
+
+        // DOM Elements
+        const tableContent = document.getElementById('tableContent');
+        const searchInput = document.getElementById('searchInput');
+        const cargoFilter = document.getElementById('cargoFilter');
+        const addOperarioBtn = document.getElementById('addOperarioBtn');
+        const operarioModal = document.getElementById('operarioModal');
+        const operarioForm = document.getElementById('operarioForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalClose = document.getElementById('modalClose');
+        const modalCancel = document.getElementById('modalCancel');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmClose = document.getElementById('confirmClose');
+        const confirmCancel = document.getElementById('confirmCancel');
+        const confirmOk = document.getElementById('confirmOk');
+        const statusDot = document.getElementById('statusDot');
+        const connectionStatus = document.getElementById('connectionStatus');
+
+        // Initialize
+        async function init() {
+            setupEventListeners();
+            await loadOperarios();
+            populateCargoFilter();
+        }
+
+        function setupEventListeners() {
+            addOperarioBtn.addEventListener('click', openAddModal);
+            modalClose.addEventListener('click', closeModal);
+            modalCancel.addEventListener('click', closeModal);
+            operarioForm.addEventListener('submit', handleFormSubmit);
+            searchInput.addEventListener('input', filterTable);
+            cargoFilter.addEventListener('change', filterTable);
+            confirmClose.addEventListener('click', closeConfirmModal);
+            confirmCancel.addEventListener('click', closeConfirmModal);
+            confirmOk.addEventListener('click', handleConfirmAction);
+        }
+
+        async function loadOperarios() {
+            try {
+                setConnectionStatus(false);
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?order=id.desc`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar operarios');
+                }
+
+                allOperarios = await response.json();
+                operarios = [...allOperarios];
+                setConnectionStatus(true);
+                renderTable();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error al cargar operarios', 'error');
+                setConnectionStatus(false);
+                renderEmptyState('Error al conectar con la base de datos');
+            }
+        }
+
+        function renderTable() {
+            if (operarios.length === 0) {
+                renderEmptyState('No hay operarios registrados');
+                return;
+            }
+
+            const table = document.createElement('table');
+
+            // Header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const columns = [
+                { key: 'rut', label: 'RUT', sortable: true },
+                { key: 'usuario', label: 'Usuario', sortable: true },
+                { key: 'nombre', label: 'Nombre', sortable: true },
+                { key: 'cargo', label: 'Cargo', sortable: true },
+                { key: 'tipo_equipo', label: 'Tipo Equipo', sortable: true },
+                { key: 'factor_ajustado', label: 'Factor', sortable: true },
+                { key: 'activo', label: 'Activo', sortable: false },
+                { key: 'actions', label: 'Acciones', sortable: false }
+            ];
+
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col.label;
+                if (col.sortable) {
+                    th.classList.add('sortable');
+                    if (currentSort.column === col.key) {
+                        th.classList.add(`sort-${currentSort.direction}`);
+                    }
+                    th.addEventListener('click', () => sortTable(col.key));
+                }
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Body
+            const tbody = document.createElement('tbody');
+            operarios.forEach(operario => {
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${escapeHtml(operario.rut)}</td>
+                    <td>${escapeHtml(operario.usuario)}</td>
+                    <td>${escapeHtml(operario.nombre)}</td>
+                    <td>${escapeHtml(operario.cargo)}</td>
+                    <td>${escapeHtml(operario.tipo_equipo)}</td>
+                    <td>${formatNumber(operario.factor_ajustado)}</td>
+                    <td>
+                        <span class="status-badge ${operario.activo ? 'status-active' : 'status-inactive'}"
+                              data-id="${operario.id}"
+                              onclick="toggleActivo(${operario.id}, event)">
+                            <span class="status-dot-small"></span>
+                            ${operario.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" onclick="openEditModal(${operario.id})" title="Editar">✏️</button>
+                            <button class="action-btn delete" onclick="openDeleteConfirm(${operario.id})" title="Eliminar">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+
+            tableContent.innerHTML = '';
+            tableContent.appendChild(table);
+        }
+
+        function renderEmptyState(message) {
+            tableContent.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function populateCargoFilter() {
+            const cargos = [...new Set(allOperarios.map(o => o.cargo))].sort();
+            const options = cargoFilter.innerHTML;
+            cargos.forEach(cargo => {
+                const option = document.createElement('option');
+                option.value = cargo;
+                option.textContent = cargo;
+                cargoFilter.appendChild(option);
+            });
+        }
+
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            operarios.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // Handle numbers
+                if (typeof aVal === 'number') {
+                    return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // Handle strings
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+
+                if (currentSort.direction === 'asc') {
+                    return aVal.localeCompare(bVal, 'es-CL');
+                } else {
+                    return bVal.localeCompare(aVal, 'es-CL');
+                }
+            });
+
+            renderTable();
+        }
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCargo = cargoFilter.value;
+
+            operarios = allOperarios.filter(o => {
+                const matchSearch = !searchTerm ||
+                    o.nombre.toLowerCase().includes(searchTerm) ||
+                    o.usuario.toLowerCase().includes(searchTerm) ||
+                    o.rut.toLowerCase().includes(searchTerm);
+
+                const matchCargo = !selectedCargo || o.cargo === selectedCargo;
+
+                return matchSearch && matchCargo;
+            });
+
+            renderTable();
+        }
+
+        function openAddModal() {
+            currentOperarioId = null;
+            modalTitle.textContent = 'Agregar Operario';
+            operarioForm.reset();
+            document.getElementById('factorInput').value = '1.0';
+            clearFormErrors();
+            operarioModal.classList.add('active');
+        }
+
+        function openEditModal(id) {
+            const operario = allOperarios.find(o => o.id === id);
+            if (!operario) return;
+
+            currentOperarioId = id;
+            modalTitle.textContent = 'Editar Operario';
+
+            document.getElementById('rutInput').value = operario.rut;
+            document.getElementById('usuarioInput').value = operario.usuario;
+            document.getElementById('nombreInput').value = operario.nombre;
+            document.getElementById('cargoInput').value = operario.cargo;
+            document.getElementById('tipoEquipoInput').value = operario.tipo_equipo;
+            document.getElementById('factorInput').value = operario.factor_ajustado;
+
+            clearFormErrors();
+            operarioModal.classList.add('active');
+        }
+
+        function closeModal() {
+            operarioModal.classList.remove('active');
+            currentOperarioId = null;
+        }
+
+        function closeConfirmModal() {
+            confirmModal.classList.remove('active');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            if (!validateForm()) return;
+
+            const data = {
+                rut: document.getElementById('rutInput').value.trim(),
+                usuario: document.getElementById('usuarioInput').value.trim().toUpperCase(),
+                nombre: document.getElementById('nombreInput').value.trim().toUpperCase(),
+                cargo: document.getElementById('cargoInput').value,
+                tipo_equipo: document.getElementById('tipoEquipoInput').value,
+                factor_ajustado: parseFloat(document.getElementById('factorInput').value)
+            };
+
+            try {
+                let response;
+                if (currentOperarioId) {
+                    // Update
+                    response = await fetch(
+                        `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${currentOperarioId}`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify(data)
+                        }
+                    );
+                } else {
+                    // Create
+                    response = await fetch(
+                        `${SUPABASE_URL}/rest/v1/${TABLE_NAME}`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify(data)
+                        }
+                    );
+                }
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Error al guardar operario');
+                }
+
+                showToast(
+                    currentOperarioId ? 'Operario actualizado exitosamente' : 'Operario creado exitosamente',
+                    'success'
+                );
+                closeModal();
+                await loadOperarios();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message || 'Error al guardar operario', 'error');
+            }
+        }
+
+        function validateForm() {
+            clearFormErrors();
+            let isValid = true;
+
+            const rut = document.getElementById('rutInput').value.trim();
+            if (!rut) {
+                showFormError('rutError', 'RUT es requerido');
+                isValid = false;
+            } else if (!validateRUT(rut)) {
+                showFormError('rutError', 'RUT inválido (formato: XX.XXX.XXX-X)');
+                isValid = false;
+            }
+
+            const usuario = document.getElementById('usuarioInput').value.trim();
+            if (!usuario) {
+                showFormError('usuarioError', 'Usuario es requerido');
+                isValid = false;
+            }
+
+            const nombre = document.getElementById('nombreInput').value.trim();
+            if (!nombre) {
+                showFormError('nombreError', 'Nombre es requerido');
+                isValid = false;
+            }
+
+            const cargo = document.getElementById('cargoInput').value;
+            if (!cargo) {
+                showFormError('cargoError', 'Cargo es requerido');
+                isValid = false;
+            }
+
+            const tipoEquipo = document.getElementById('tipoEquipoInput').value;
+            if (!tipoEquipo) {
+                showFormError('tipoEquipoError', 'Tipo de equipo es requerido');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function validateRUT(rut) {
+            const rutRegex = /^\d{1,2}\.\d{3}\.\d{3}-[0-9K]$/i;
+            return rutRegex.test(rut);
+        }
+
+        function showFormError(errorId, message) {
+            const errorEl = document.getElementById(errorId);
+            if (errorEl) {
+                errorEl.textContent = message;
+                const inputId = errorId.replace('Error', 'Input');
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.classList.add('error');
+                }
+            }
+        }
+
+        function clearFormErrors() {
+            document.querySelectorAll('.form-error').forEach(el => {
+                el.textContent = '';
+            });
+            document.querySelectorAll('input, select').forEach(el => {
+                el.classList.remove('error');
+            });
+        }
+
+        async function toggleActivo(id, event) {
+            event.preventDefault();
+            const operario = allOperarios.find(o => o.id === id);
+            if (!operario) return;
+
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${id}`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({ activo: !operario.activo })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al actualizar estado');
+                }
+
+                await loadOperarios();
+                showToast('Estado actualizado', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error al actualizar estado', 'error');
+            }
+        }
+
+        function openDeleteConfirm(id) {
+            const operario = allOperarios.find(o => o.id === id);
+            if (!operario) return;
+
+            document.getElementById('confirmTitle').textContent = 'Eliminar Operario';
+            document.getElementById('confirmMessage').textContent =
+                `¿Está seguro de que desea eliminar a ${operario.nombre}?`;
+
+            confirmOk.onclick = () => deleteOperario(id);
+            confirmModal.classList.add('active');
+        }
+
+        function handleConfirmAction() {
+            // Will be overridden by specific functions
+        }
+
+        async function deleteOperario(id) {
+            try {
+                closeConfirmModal();
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${id}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al eliminar operario');
+                }
+
+                showToast('Operario eliminado exitosamente', 'success');
+                await loadOperarios();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error al eliminar operario', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function setConnectionStatus(connected) {
+            if (connected) {
+                statusDot.classList.remove('error');
+                connectionStatus.textContent = 'Conectado';
+            } else {
+                statusDot.classList.add('error');
+                connectionStatus.textContent = 'Sin conexión';
+            }
+        }
+
+        function formatNumber(num) {
+            return Number(num).toLocaleString('es-CL', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

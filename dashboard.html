@@ -1,497 +1,1109 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Productividad Operarios — Trailer Logistics</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.15.0/Recharts.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Inter',system-ui,sans-serif; background:#F2F2F5; color:#000; }
-.tabular-nums { font-variant-numeric:tabular-nums; }
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-thumb { background:#AEAEB8; border-radius:3px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Productividad ALM | Trailer Logistics</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/react.development.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/react-dom.development.min.js"></script>
+
+    <!-- PropTypes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+    <!-- Recharts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.15.0/recharts.min.js"></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F2F2F5;
+            color: #192853;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background-color: #192853;
+            color: #FFFEFF;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo-box {
+            background-color: #0E245E;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border: 2px solid #10B981;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links li a {
+            color: #AEAEB8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links li a:hover {
+            color: #FFFEFF;
+        }
+
+        .nav-links li a.active {
+            color: #10B981;
+            border-bottom: 2px solid #10B981;
+            padding-bottom: 0.5rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #AEAEB8;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #10B981;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #192853;
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+            background-color: #FFFEFF;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #5E6373;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.75rem;
+            border: 1px solid #AEAEB8;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            color: #192853;
+            background-color: #FFFEFF;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #0E245E;
+            box-shadow: 0 0 0 3px rgba(14, 36, 94, 0.1);
+        }
+
+        .filter-group input::placeholder {
+            color: #AEAEB8;
+        }
+
+        .btn-apply {
+            padding: 0.75rem 1.5rem;
+            background-color: #0E245E;
+            color: #FFFEFF;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .btn-apply:hover {
+            background-color: #192853;
+            transform: translateY(-2px);
+        }
+
+        .btn-apply:active {
+            transform: translateY(0);
+        }
+
+        /* KPI Cards */
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background-color: #FFFEFF;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #0E245E;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #5E6373;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #192853;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-subtitle {
+            font-size: 0.8rem;
+            color: #AEAEB8;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background-color: #FFFEFF;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #192853;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Table */
+        .table-section {
+            background-color: #FFFEFF;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-search {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .table-search input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #AEAEB8;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .table-search input:focus {
+            outline: none;
+            border-color: #0E245E;
+            box-shadow: 0 0 0 3px rgba(14, 36, 94, 0.1);
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .ranking-table thead {
+            background-color: #F2F2F5;
+            border-bottom: 2px solid #AEAEB8;
+        }
+
+        .ranking-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #5E6373;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ranking-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #F2F2F5;
+            font-size: 0.95rem;
+            color: #192853;
+        }
+
+        .ranking-table tbody tr:nth-child(odd) {
+            background-color: #F2F2F5;
+        }
+
+        .ranking-table tbody tr:hover {
+            background-color: #FFFEFF;
+            box-shadow: inset 0 0 0 1px #AEAEB8;
+        }
+
+        .rank-number {
+            font-weight: 700;
+            color: #0E245E;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+        }
+
+        .operator-name {
+            font-weight: 600;
+            color: #192853;
+        }
+
+        .cargo-badge {
+            display: inline-block;
+            background-color: #0E245E;
+            color: #FFFEFF;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .mono-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .pagination button,
+        .pagination span {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #AEAEB8;
+            background-color: #FFFEFF;
+            color: #192853;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #0E245E;
+            color: #FFFEFF;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background-color: #0E245E;
+            color: #FFFEFF;
+            border-color: #0E245E;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #F2F2F5 25%, #AEAEB8 50%, #F2F2F5 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-card {
+            height: 120px;
+            margin-bottom: 1rem;
+        }
+
+        .skeleton-chart {
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #AEAEB8;
+        }
+
+        .no-data-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .filters-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-section {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-search {
+                min-width: auto;
+            }
+
+            .ranking-table th,
+            .ranking-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        .error-message {
+            background-color: #FEE2E2;
+            color: #DC2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #DC2626;
+        }
+    </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo, useEffect } = React;
-const {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie
-} = Recharts;
+    <div id="root"></div>
 
-// ========== DATA ==========
-const DAILY_DATA = [
-  {dia:"2026-02-23",total_mov:1342,avg_prod:15.95,operarios:11},
-  {dia:"2026-02-24",total_mov:1645,avg_prod:19.55,operarios:11},
-  {dia:"2026-02-25",total_mov:1827,avg_prod:27.47,operarios:10},
-  {dia:"2026-02-26",total_mov:1857,avg_prod:25.38,operarios:11},
-  {dia:"2026-02-27",total_mov:1542,avg_prod:21.08,operarios:11},
-  {dia:"2026-03-02",total_mov:1620,avg_prod:19.25,operarios:11},
-  {dia:"2026-03-03",total_mov:1479,avg_prod:19.33,operarios:10},
-  {dia:"2026-03-04",total_mov:1899,avg_prod:25.96,operarios:11},
-  {dia:"2026-03-05",total_mov:1615,avg_prod:22.08,operarios:11},
-  {dia:"2026-03-06",total_mov:1648,avg_prod:22.53,operarios:11},
-  {dia:"2026-03-09",total_mov:1838,avg_prod:20.02,operarios:12},
-  {dia:"2026-03-10",total_mov:1536,avg_prod:18.25,operarios:11},
-  {dia:"2026-03-11",total_mov:1963,avg_prod:24.60,operarios:12},
-  {dia:"2026-03-12",total_mov:1843,avg_prod:21.32,operarios:13},
-  {dia:"2026-03-13",total_mov:2033,avg_prod:25.48,operarios:12},
-];
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
 
-const RANKING = [
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",total_mov:4470,prod:36.82,dias:16,cajas:2384,destino:2086},
-  {usuario:"YGARRIDO",nombre:"Yesenia Garrido",cargo:"OP. APILADOR",total_mov:1383,prod:25.01,dias:8,cajas:963,destino:420},
-  {usuario:"CAGUAS",nombre:"Carlos Aguas",cargo:"OP. GRÚA",total_mov:3338,prod:23.86,dias:18,cajas:2706,destino:632},
-  {usuario:"SNUNEZ",nombre:"Sixto Núñez",cargo:"OP. GRÚA",total_mov:3613,prod:23.75,dias:18,cajas:2624,destino:989},
-  {usuario:"IMORALES",nombre:"Ignacio Morales",cargo:"OP. APILADOR",total_mov:1146,prod:23.17,dias:6,cajas:793,destino:353},
-  {usuario:"Jvalderrey",nombre:"Jesús Valderrey",cargo:"OP. APILADOR",total_mov:3212,prod:20.68,dias:18,cajas:2441,destino:771},
-  {usuario:"JALARCON",nombre:"Javier Alarcón",cargo:"OP. TRANSPALETA",total_mov:2379,prod:18.95,dias:16,cajas:798,destino:1581},
-  {usuario:"JESPINOZA",nombre:"José Espinoza",cargo:"OP. GRÚA DOBLE",total_mov:2184,prod:17.64,dias:16,cajas:569,destino:1615},
-  {usuario:"CGARCES",nombre:"César Garcés",cargo:"OP. TRANSPALETA",total_mov:2684,prod:17.30,dias:18,cajas:903,destino:1781},
-  {usuario:"GUVALENZUE",nombre:"Gustavo Valenzuela",cargo:"OP. GRÚA",total_mov:1875,prod:12.50,dias:18,cajas:598,destino:1277},
-  {usuario:"GCOLLAZOS",nombre:"Gustavo Collazos",cargo:"RECEPCIONISTA",total_mov:1274,prod:11.81,dias:14,cajas:1158,destino:116},
-  {usuario:"CTESTA",nombre:"Cristopher Testa",cargo:"RECEPCIONISTA",total_mov:847,prod:8.77,dias:12,cajas:847,destino:0},
-  {usuario:"MSANCHEZ",nombre:"Milca Sánchez",cargo:"RECEPCIONISTA",total_mov:668,prod:7.37,dias:12,cajas:668,destino:0},
-];
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbXB1eWpvaWRleHJncG5vdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjYxOTQsImV4cCI6MjA4ODc0MjE5NH0.F8QeJldEz8QLBkbtCZ6a78zK27iSDnpgNqtnJLDuWN4';
 
-const BY_CARGO = [
-  {cargo:"OP. GRÚA DOBLE",avg_prod:27.23,total_mov:6654,operarios:2,color:"#192853"},
-  {cargo:"OP. APILADOR",avg_prod:22.23,total_mov:5741,operarios:3,color:"#0E245E"},
-  {cargo:"OP. GRÚA",avg_prod:20.68,total_mov:8826,operarios:3,color:"#5E6373"},
-  {cargo:"OP. TRANSPALETA",avg_prod:18.08,total_mov:5063,operarios:2,color:"#94A3B8"},
-  {cargo:"RECEPCIONISTA",avg_prod:9.83,total_mov:2789,operarios:3,color:"#AEAEB8"},
-];
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const DETAIL_DATA = [
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-02-23",cajas:85,destino:103,total:188,prod:24.58},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-02-24",cajas:137,destino:155,total:292,prod:38.17},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-02-25",cajas:194,destino:148,total:342,prod:51.43},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-02-26",cajas:164,destino:123,total:287,prod:43.16},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-02-27",cajas:121,destino:116,total:237,prod:35.64},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-02",cajas:128,destino:133,total:261,prod:34.12},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-03",cajas:122,destino:96,total:218,prod:28.50},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-04",cajas:194,destino:148,total:342,prod:51.43},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-05",cajas:152,destino:136,total:288,prod:43.31},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-06",cajas:120,destino:115,total:235,prod:35.34},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-09",cajas:149,destino:108,total:257,prod:33.59},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-10",cajas:143,destino:129,total:272,prod:35.56},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-11",cajas:178,destino:138,total:316,prod:47.52},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-12",cajas:202,destino:162,total:364,prod:54.74},
-  {usuario:"PLOPEZ",nombre:"Pedro López",cargo:"OP. GRÚA DOBLE",dia:"2026-03-13",cajas:195,destino:176,total:371,prod:55.79},
-  {usuario:"SNUNEZ",nombre:"Sixto Núñez",cargo:"OP. GRÚA",dia:"2026-02-23",cajas:110,destino:81,total:191,prod:24.97},
-  {usuario:"SNUNEZ",nombre:"Sixto Núñez",cargo:"OP. GRÚA",dia:"2026-02-24",cajas:145,destino:94,total:239,prod:31.24},
-  {usuario:"SNUNEZ",nombre:"Sixto Núñez",cargo:"OP. GRÚA",dia:"2026-02-25",cajas:175,destino:35,total:210,prod:31.58},
-  {usuario:"CAGUAS",nombre:"Carlos Aguas",cargo:"OP. GRÚA",dia:"2026-02-23",cajas:112,destino:15,total:127,prod:16.60},
-  {usuario:"CAGUAS",nombre:"Carlos Aguas",cargo:"OP. GRÚA",dia:"2026-02-24",cajas:167,destino:21,total:188,prod:24.58},
-  {usuario:"Jvalderrey",nombre:"Jesús Valderrey",cargo:"OP. APILADOR",dia:"2026-02-23",cajas:105,destino:95,total:200,prod:26.14},
-  {usuario:"Jvalderrey",nombre:"Jesús Valderrey",cargo:"OP. APILADOR",dia:"2026-02-24",cajas:130,destino:74,total:204,prod:26.67},
-  {usuario:"JALARCON",nombre:"Javier Alarcón",cargo:"OP. TRANSPALETA",dia:"2026-02-23",cajas:25,destino:98,total:123,prod:16.08},
-  {usuario:"JALARCON",nombre:"Javier Alarcón",cargo:"OP. TRANSPALETA",dia:"2026-02-24",cajas:45,destino:112,total:157,prod:20.52},
-];
+        // Utility Functions
+        const formatChileanNumber = (num) => {
+            return num.toLocaleString('es-CL', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
 
-// ========== HELPERS ==========
-const fmt = (n) => new Intl.NumberFormat('es-CL').format(n);
-const fmtDec = (n) => new Intl.NumberFormat('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-const fmtDate = (d) => {
-  const dt = new Date(d + 'T12:00:00');
-  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  return `${dias[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1}`;
-};
-const fmtDateShort = (d) => {
-  const dt = new Date(d + 'T12:00:00');
-  return `${dt.getDate()}/${dt.getMonth()+1}`;
-};
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        };
 
-// ========== ICONS (SVG inline) ==========
-const Icon = ({name, size=20, color="currentColor", ...props}) => {
-  const icons = {
-    users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-    activity: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-    box: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>,
-    trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
-    arrowUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
-    arrowDown: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
-    truck: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>,
-    filter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
-  };
-  return icons[name] || null;
-};
-
-// ========== COMPONENTS ==========
-const KPICard = ({label, value, icon, trend, trendLabel, color="#192853"}) => (
-  <div style={{background:'#fff',borderRadius:12,padding:'20px 24px',border:'1px solid #F1F5F9',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-      <span style={{fontSize:13,fontWeight:500,color:'#5E6373'}}>{label}</span>
-      <span style={{color:'#AEAEB8'}}>{icon}</span>
-    </div>
-    <div className="tabular-nums" style={{fontSize:32,fontWeight:700,color,lineHeight:1.1}}>{value}</div>
-    {trend !== undefined && (
-      <div style={{display:'flex',alignItems:'center',marginTop:8,fontSize:13}}>
-        {trend >= 0 ? <Icon name="arrowUp" size={16} color="#10B981"/> : <Icon name="arrowDown" size={16} color="#EF4444"/>}
-        <span style={{color:trend>=0?'#10B981':'#EF4444',fontWeight:500,marginLeft:2}}>{trend>=0?'+':''}{fmtDec(trend)}%</span>
-        <span style={{color:'#AEAEB8',marginLeft:8}}>{trendLabel}</span>
-      </div>
-    )}
-  </div>
-);
-
-const Badge = ({children, color="#192853"}) => (
-  <span style={{display:'inline-block',padding:'2px 10px',borderRadius:20,fontSize:11,fontWeight:600,background:color+'18',color,whiteSpace:'nowrap'}}>{children}</span>
-);
-
-const cargoColor = (c) => {
-  if(c.includes('DOBLE')) return '#192853';
-  if(c.includes('GRÚA')||c.includes('GRUA')) return '#0E245E';
-  if(c.includes('APILADOR')) return '#5E6373';
-  if(c.includes('TRANSPALETA')) return '#94A3B8';
-  return '#AEAEB8';
-};
-
-// ========== MAIN APP ==========
-function App() {
-  const [view, setView] = useState('general');
-  const [selectedOp, setSelectedOp] = useState(null);
-  const [cargoFilter, setCargoFilter] = useState('TODOS');
-
-  const filteredRanking = useMemo(() => {
-    if(cargoFilter === 'TODOS') return RANKING;
-    return RANKING.filter(r => r.cargo === cargoFilter);
-  }, [cargoFilter]);
-
-  const chartData = DAILY_DATA.map(d => ({...d, label: fmtDateShort(d.dia)}));
-
-  // Weekly average for comparison
-  const lastWeek = DAILY_DATA.slice(-5);
-  const prevWeek = DAILY_DATA.slice(-10,-5);
-  const avgLast = lastWeek.reduce((s,d)=>s+d.avg_prod,0)/lastWeek.length;
-  const avgPrev = prevWeek.length ? prevWeek.reduce((s,d)=>s+d.avg_prod,0)/prevWeek.length : avgLast;
-  const trendProd = ((avgLast - avgPrev) / avgPrev * 100);
-
-  const totalMov = DAILY_DATA.reduce((s,d)=>s+d.total_mov, 0);
-  const avgProd = DAILY_DATA.reduce((s,d)=>s+d.avg_prod, 0) / DAILY_DATA.length;
-
-  return (
-    <div style={{minHeight:'100vh'}}>
-      {/* HEADER */}
-      <div style={{background:'#010B24',color:'#fff',padding:'16px 32px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div style={{display:'flex',alignItems:'center',gap:16}}>
-          <Icon name="truck" size={28} color="#fff"/>
-          <div>
-            <div style={{fontSize:20,fontWeight:700,letterSpacing:'-0.02em'}}>Trailer Logistics</div>
-            <div style={{fontSize:12,color:'#94A3B8',fontWeight:400}}>Panel de Productividad Operarios</div>
-          </div>
-        </div>
-        <div style={{display:'flex',gap:8}}>
-          {['general','detalle','ranking'].map(v => (
-            <button key={v} onClick={()=>setView(v)} style={{
-              padding:'8px 20px',borderRadius:8,border:'none',cursor:'pointer',fontSize:13,fontWeight:600,
-              background:view===v?'#192853':'transparent',color:view===v?'#fff':'#94A3B8',
-              transition:'all 0.15s'
-            }}>{v==='general'?'Vista General':v==='detalle'?'Detalle Diario':'Ranking'}</button>
-          ))}
-        </div>
-        <div style={{fontSize:13,color:'#94A3B8'}}>Feb — Mar 2026</div>
-      </div>
-
-      <div style={{padding:'24px 32px',maxWidth:1400,margin:'0 auto'}}>
-
-        {/* ========== VISTA GENERAL ========== */}
-        {view === 'general' && <>
-          {/* KPI CARDS */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20,marginBottom:24}}>
-            <KPICard
-              label="Operarios Activos"
-              value={13}
-              icon={<Icon name="users" size={20}/>}
-            />
-            <KPICard
-              label="Productividad Promedio"
-              value={`${fmtDec(avgProd)} mov/hr`}
-              icon={<Icon name="activity" size={20}/>}
-              trend={trendProd}
-              trendLabel="vs semana anterior"
-            />
-            <KPICard
-              label="Total Movimientos"
-              value={fmt(totalMov)}
-              icon={<Icon name="box" size={20}/>}
-            />
-            <KPICard
-              label="Mejor Operario"
-              value="Pedro López"
-              icon={<Icon name="trophy" size={20}/>}
-              color="#10B981"
-            />
-          </div>
-
-          {/* CHARTS ROW */}
-          <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:20,marginBottom:24}}>
-            {/* Line chart - Productividad diaria */}
-            <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-              <div style={{fontSize:16,fontWeight:600,marginBottom:4}}>Productividad Diaria Promedio</div>
-              <div style={{fontSize:13,color:'#5E6373',marginBottom:20}}>Movimientos/hora promedio del equipo</div>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6}/>
-                  <XAxis dataKey="label" tick={{fontSize:11,fill:'#64748B'}}/>
-                  <YAxis tick={{fontSize:11,fill:'#64748B'}} domain={[0,'auto']}/>
-                  <Tooltip
-                    contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                    formatter={(v) => [fmtDec(v) + ' mov/hr', 'Productividad']}
-                    labelFormatter={(l) => `Día ${l}`}
-                  />
-                  <Line type="monotone" dataKey="avg_prod" stroke="#192853" strokeWidth={2.5} dot={{r:4,fill:'#192853'}} activeDot={{r:6}}/>
-                </LineChart>
-              </ResponsiveContainer>
+        // KPI Card Component
+        const KPICard = ({ label, value, subtitle }) => (
+            <div className="kpi-card">
+                <div className="kpi-label">{label}</div>
+                <div className="kpi-value">{value}</div>
+                {subtitle && <div className="kpi-subtitle">{subtitle}</div>}
             </div>
+        );
 
-            {/* Bar chart - Por cargo */}
-            <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-              <div style={{fontSize:16,fontWeight:600,marginBottom:4}}>Productividad por Cargo</div>
-              <div style={{fontSize:13,color:'#5E6373',marginBottom:20}}>Promedio mov/hr por tipo de operario</div>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={BY_CARGO} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} horizontal={false}/>
-                  <XAxis type="number" tick={{fontSize:11,fill:'#64748B'}}/>
-                  <YAxis type="category" dataKey="cargo" tick={{fontSize:11,fill:'#64748B'}} width={110}/>
-                  <Tooltip
-                    contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                    formatter={(v) => [fmtDec(v) + ' mov/hr']}
-                  />
-                  <Bar dataKey="avg_prod" radius={[0,6,6,0]} barSize={24}>
-                    {BY_CARGO.map((e,i) => <Cell key={i} fill={e.color}/>)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* SECOND ROW */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-            {/* Bar chart - Movimientos diarios */}
-            <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-              <div style={{fontSize:16,fontWeight:600,marginBottom:4}}>Movimientos Diarios Totales</div>
-              <div style={{fontSize:13,color:'#5E6373',marginBottom:20}}>Volumen total de operación por día</div>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6}/>
-                  <XAxis dataKey="label" tick={{fontSize:11,fill:'#64748B'}}/>
-                  <YAxis tick={{fontSize:11,fill:'#64748B'}}/>
-                  <Tooltip
-                    contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                    formatter={(v) => [fmt(v) + ' mov', 'Total']}
-                  />
-                  <Bar dataKey="total_mov" fill="#192853" radius={[4,4,0,0]} barSize={28}/>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Distribution pie */}
-            <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-              <div style={{fontSize:16,fontWeight:600,marginBottom:4}}>Distribución de Movimientos</div>
-              <div style={{fontSize:13,color:'#5E6373',marginBottom:20}}>Participación por tipo de cargo</div>
-              <div style={{display:'flex',alignItems:'center',gap:16}}>
-                <ResponsiveContainer width="55%" height={250}>
-                  <PieChart>
-                    <Pie data={BY_CARGO} dataKey="total_mov" nameKey="cargo" cx="50%" cy="50%" outerRadius={90} innerRadius={55}>
-                      {BY_CARGO.map((e,i) => <Cell key={i} fill={e.color}/>)}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                      formatter={(v) => [fmt(v) + ' mov']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{fontSize:13}}>
-                  {BY_CARGO.map((c,i) => (
-                    <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                      <div style={{width:12,height:12,borderRadius:3,background:c.color,flexShrink:0}}/>
-                      <div>
-                        <div style={{fontWeight:500}}>{c.cargo}</div>
-                        <div style={{color:'#5E6373',fontSize:12}}>{fmt(c.total_mov)} mov · {c.operarios} ops</div>
-                      </div>
+        // Header Component
+        const Header = () => (
+            <header className="header">
+                <div className="header-left">
+                    <div className="logo-box">TL</div>
+                    <h1 className="header-title">TRAILER LOGISTICS</h1>
+                </div>
+                <nav>
+                    <ul className="nav-links">
+                        <li><a href="index.html">Carga</a></li>
+                        <li><a href="dashboard.html" className="active">Dashboard</a></li>
+                        <li><a href="operarios.html">Operarios</a></li>
+                    </ul>
+                </nav>
+                <div className="header-right">
+                    <div className="connection-status">
+                        <span className="status-dot"></span>
+                        <span>Conectado</span>
                     </div>
-                  ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </>}
+            </header>
+        );
 
-        {/* ========== VISTA RANKING ========== */}
-        {view === 'ranking' && <>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-            <div>
-              <div style={{fontSize:20,fontWeight:700}}>Ranking de Productividad</div>
-              <div style={{fontSize:14,color:'#5E6373'}}>Período Feb — Mar 2026 · Ordenado por productividad promedio</div>
-            </div>
-            <div style={{display:'flex',gap:6}}>
-              {['TODOS','OP. GRÚA DOBLE','OP. GRÚA','OP. APILADOR','OP. TRANSPALETA','RECEPCIONISTA'].map(c => (
-                <button key={c} onClick={()=>setCargoFilter(c)} style={{
-                  padding:'6px 14px',borderRadius:6,border:'1px solid #E2E8F0',cursor:'pointer',fontSize:12,fontWeight:500,
-                  background:cargoFilter===c?'#192853':'#fff',color:cargoFilter===c?'#fff':'#5E6373',
-                  transition:'all 0.15s'
-                }}>{c === 'TODOS' ? 'Todos' : c}</button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #F1F5F9',overflow:'hidden'}}>
-            <table style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead>
-                <tr style={{borderBottom:'1px solid #F1F5F9'}}>
-                  {['#','Operario','Cargo','Productividad','Mov. Totales','Mov. Cajas','Mov. Destino','Días'].map((h,i) => (
-                    <th key={i} style={{padding:'14px 16px',fontSize:12,fontWeight:600,color:'#5E6373',textAlign:i>=3?'right':'left',textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRanking.map((r,i) => (
-                  <tr key={r.usuario} style={{borderBottom:'1px solid #F8FAFC',cursor:'pointer',transition:'background 0.1s'}}
-                    onMouseEnter={e=>e.currentTarget.style.background='#F8FAFC'}
-                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-                    onClick={()=>{setSelectedOp(r.usuario);setView('detalle');}}>
-                    <td style={{padding:'14px 16px',fontSize:14,fontWeight:700,color:i<3?'#192853':'#5E6373',width:40}}>
-                      {i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}
-                    </td>
-                    <td style={{padding:'14px 16px'}}>
-                      <div style={{fontWeight:600,fontSize:14}}>{r.nombre}</div>
-                      <div style={{fontSize:12,color:'#AEAEB8'}}>{r.usuario}</div>
-                    </td>
-                    <td style={{padding:'14px 16px'}}><Badge color={cargoColor(r.cargo)}>{r.cargo}</Badge></td>
-                    <td className="tabular-nums" style={{padding:'14px 16px',textAlign:'right',fontSize:18,fontWeight:700,color:'#192853'}}>{fmtDec(r.prod)}</td>
-                    <td className="tabular-nums" style={{padding:'14px 16px',textAlign:'right',fontSize:14,fontWeight:500}}>{fmt(r.total_mov)}</td>
-                    <td className="tabular-nums" style={{padding:'14px 16px',textAlign:'right',fontSize:14,color:'#5E6373'}}>{fmt(r.cajas)}</td>
-                    <td className="tabular-nums" style={{padding:'14px 16px',textAlign:'right',fontSize:14,color:'#5E6373'}}>{fmt(r.destino)}</td>
-                    <td className="tabular-nums" style={{padding:'14px 16px',textAlign:'right',fontSize:14,color:'#5E6373'}}>{r.dias}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Bar chart ranking */}
-          <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9',marginTop:20}}>
-            <div style={{fontSize:16,fontWeight:600,marginBottom:16}}>Comparativo de Productividad</div>
-            <ResponsiveContainer width="100%" height={380}>
-              <BarChart data={filteredRanking} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} horizontal={false}/>
-                <XAxis type="number" tick={{fontSize:11,fill:'#64748B'}}/>
-                <YAxis type="category" dataKey="nombre" tick={{fontSize:12,fill:'#64748B'}} width={140}/>
-                <Tooltip
-                  contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                  formatter={(v) => [fmtDec(v) + ' mov/hr', 'Productividad']}
-                />
-                <Bar dataKey="prod" radius={[0,6,6,0]} barSize={22}>
-                  {filteredRanking.map((e,i) => <Cell key={i} fill={cargoColor(e.cargo)}/>)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>}
-
-        {/* ========== VISTA DETALLE ========== */}
-        {view === 'detalle' && <>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-            <div>
-              <div style={{fontSize:20,fontWeight:700}}>Detalle Diario por Operario</div>
-              <div style={{fontSize:14,color:'#5E6373'}}>Selecciona un operario para ver su evolución diaria</div>
-            </div>
-          </div>
-
-          <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:20}}>
-            {RANKING.map(r => (
-              <button key={r.usuario} onClick={()=>setSelectedOp(r.usuario)} style={{
-                padding:'8px 16px',borderRadius:8,border:'1px solid #E2E8F0',cursor:'pointer',fontSize:13,fontWeight:500,
-                background:selectedOp===r.usuario?'#192853':'#fff',color:selectedOp===r.usuario?'#fff':'#5E6373',
-                transition:'all 0.15s'
-              }}>{r.nombre}</button>
-            ))}
-          </div>
-
-          {selectedOp && (() => {
-            const opData = DETAIL_DATA.filter(d => d.usuario === selectedOp);
-            const opInfo = RANKING.find(r => r.usuario === selectedOp);
-            if(!opInfo) return <div style={{padding:40,textAlign:'center',color:'#5E6373'}}>Sin datos detallados disponibles para este operario</div>;
-
-            const chartDataOp = opData.map(d => ({...d, label: fmtDateShort(d.dia)}));
-
-            return <>
-              {/* KPI cards for selected operator */}
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
-                <KPICard label="Productividad Promedio" value={`${fmtDec(opInfo.prod)} mov/hr`} icon={<Icon name="activity" size={18}/>} color="#192853"/>
-                <KPICard label="Total Movimientos" value={fmt(opInfo.total_mov)} icon={<Icon name="box" size={18}/>}/>
-                <KPICard label="Mov. Cajas" value={fmt(opInfo.cajas)} icon={<Icon name="box" size={18}/>} color="#0E245E"/>
-                <KPICard label="Mov. Destino" value={fmt(opInfo.destino)} icon={<Icon name="box" size={18}/>} color="#5E6373"/>
-              </div>
-
-              {opData.length > 0 ? (
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-                  <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-                    <div style={{fontSize:16,fontWeight:600,marginBottom:16}}>Evolución de Productividad</div>
-                    <ResponsiveContainer width="100%" height={280}>
-                      <LineChart data={chartDataOp}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6}/>
-                        <XAxis dataKey="label" tick={{fontSize:11,fill:'#64748B'}}/>
-                        <YAxis tick={{fontSize:11,fill:'#64748B'}}/>
-                        <Tooltip
-                          contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}}
-                          formatter={(v) => [fmtDec(v) + ' mov/hr']}
-                        />
-                        <Line type="monotone" dataKey="prod" stroke="#192853" strokeWidth={2.5} dot={{r:4,fill:'#192853'}} activeDot={{r:6}} name="Productividad"/>
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #F1F5F9'}}>
-                    <div style={{fontSize:16,fontWeight:600,marginBottom:16}}>Desglose Cajas vs Destino</div>
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={chartDataOp}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6}/>
-                        <XAxis dataKey="label" tick={{fontSize:11,fill:'#64748B'}}/>
-                        <YAxis tick={{fontSize:11,fill:'#64748B'}}/>
-                        <Tooltip contentStyle={{borderRadius:8,border:'1px solid #E2E8F0',fontSize:13}} formatter={(v)=>[fmt(v)+' mov']}/>
-                        <Legend iconType="circle" wrapperStyle={{fontSize:12}}/>
-                        <Bar dataKey="cajas" name="Cajas" fill="#192853" radius={[4,4,0,0]} barSize={18}/>
-                        <Bar dataKey="destino" name="Destino" fill="#94A3B8" radius={[4,4,0,0]} barSize={18}/>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+        // Loading Skeleton Component
+        const LoadingSkeleton = () => (
+            <div className="container">
+                <div style={{ marginBottom: '2rem' }}>
+                    <div className="skeleton skeleton-card"></div>
+                    <div className="skeleton skeleton-card"></div>
+                    <div className="skeleton skeleton-card"></div>
+                    <div className="skeleton skeleton-card"></div>
                 </div>
-              ) : (
-                <div style={{background:'#fff',borderRadius:12,padding:40,textAlign:'center',color:'#5E6373',border:'1px solid #F1F5F9'}}>
-                  Detalle diario no disponible en la muestra. En producción, estos datos se cargan desde Supabase.
+                <div style={{ marginBottom: '2rem' }}>
+                    <div className="skeleton skeleton-chart"></div>
+                    <div className="skeleton skeleton-chart"></div>
                 </div>
-              )}
-            </>;
-          })()}
-
-          {!selectedOp && (
-            <div style={{background:'#fff',borderRadius:12,padding:60,textAlign:'center',border:'1px solid #F1F5F9'}}>
-              <Icon name="users" size={48} color="#AEAEB8"/>
-              <div style={{fontSize:16,fontWeight:600,marginTop:16,color:'#5E6373'}}>Selecciona un operario para ver su detalle</div>
             </div>
-          )}
-        </>}
+        );
 
-      </div>
+        // Ranking Table Component
+        const RankingTable = ({ data, currentPage, itemsPerPage, onPageChange, searchTerm, onSearchChange }) => {
+            const filteredData = useMemo(() => {
+                return data.filter(item =>
+                    item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }, [data, searchTerm]);
 
-      {/* FOOTER */}
-      <div style={{padding:'16px 32px',borderTop:'1px solid #E2E8F0',textAlign:'center',fontSize:12,color:'#AEAEB8',marginTop:40}}>
-        Trailer Logistics · Panel de Productividad · Datos: HISTORIAL CAJAS + HISTORIAL DESTINO · Conectado a Supabase
-      </div>
-    </div>
-  );
-}
+            const paginatedData = useMemo(() => {
+                const start = (currentPage - 1) * itemsPerPage;
+                return filteredData.slice(start, start + itemsPerPage);
+            }, [filteredData, currentPage, itemsPerPage]);
 
-ReactDOM.render(<App/>, document.getElementById('root'));
-</script>
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+            return (
+                <div className="table-section">
+                    <div className="table-header">
+                        <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
+                        <div className="table-search">
+                            <input
+                                type="text"
+                                placeholder="Buscar por nombre..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    onSearchChange(e.target.value);
+                                    onPageChange(1);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {filteredData.length === 0 ? (
+                        <div className="no-data">
+                            <div className="no-data-icon">📭</div>
+                            <p>No hay datos disponibles</p>
+                        </div>
+                    ) : (
+                        <>
+                            <table className="ranking-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Operario</th>
+                                        <th>Cargo</th>
+                                        <th>Total Mov.</th>
+                                        <th>Prom. LPN/Hora</th>
+                                        <th>Dias Trab.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedData.map((item, idx) => (
+                                        <tr key={item.usuario}>
+                                            <td><span className="rank-number">{(currentPage - 1) * itemsPerPage + idx + 1}</span></td>
+                                            <td><span className="operator-name">{item.nombre}</span></td>
+                                            <td><span className="cargo-badge">{item.cargo}</span></td>
+                                            <td><span className="mono-value">{item.total_movimientos}</span></td>
+                                            <td><span className="mono-value">{formatChileanNumber(item.productividad_promedio)}</span></td>
+                                            <td><span className="mono-value">{item.dias_trabajados}</span></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {totalPages > 1 && (
+                                <div className="pagination">
+                                    <button
+                                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        ← Anterior
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                        <button
+                                            key={page}
+                                            onClick={() => onPageChange(page)}
+                                            className={page === currentPage ? 'active' : ''}
+                                        >
+                                            {page}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Siguiente →
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            );
+        };
+
+        // Main Dashboard Component
+        const Dashboard = () => {
+            const [allData, setAllData] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [dateFrom, setDateFrom] = useState('');
+            const [dateTo, setDateTo] = useState('');
+            const [selectedCargo, setSelectedCargo] = useState('Todos');
+            const [periodView, setPeriodView] = useState('Diario');
+            const [currentPage, setCurrentPage] = useState(1);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            // Fetch Data on Mount
+            useEffect(() => {
+                const fetchData = async () => {
+                    try {
+                        setLoading(true);
+                        setError(null);
+
+                        let query = supabase
+                            .from('3-productividad_final')
+                            .select('*')
+                            .order('dia', { ascending: true });
+
+                        const { data, error: supabaseError } = await query;
+
+                        if (supabaseError) throw supabaseError;
+
+                        setAllData(data || []);
+
+                        // Set default date range to last 30 days
+                        if (data && data.length > 0) {
+                            const today = new Date();
+                            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+                            setDateFrom(thirtyDaysAgo.toISOString().split('T')[0]);
+                            setDateTo(today.toISOString().split('T')[0]);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching data:', err);
+                        setError('Error al cargar los datos. Por favor, intente nuevamente.');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                fetchData();
+            }, []);
+
+            // Filter Data
+            const filteredData = useMemo(() => {
+                return allData.filter(item => {
+                    const itemDate = new Date(item.dia);
+                    const fromDate = dateFrom ? new Date(dateFrom) : null;
+                    const toDate = dateTo ? new Date(dateTo) : null;
+
+                    if (fromDate && itemDate < fromDate) return false;
+                    if (toDate && itemDate > toDate) return false;
+                    if (selectedCargo !== 'Todos' && item.cargo !== selectedCargo) return false;
+
+                    return true;
+                });
+            }, [allData, dateFrom, dateTo, selectedCargo]);
+
+            // Calculate KPIs
+            const kpis = useMemo(() => {
+                if (filteredData.length === 0) {
+                    return {
+                        avgProductivity: 0,
+                        totalMovements: 0,
+                        activeOperators: 0,
+                        daysWithData: 0
+                    };
+                }
+
+                const avgProductivity = filteredData.reduce((sum, item) => sum + (item.productividad_hora || 0), 0) / filteredData.length;
+                const totalMovements = filteredData.reduce((sum, item) => sum + (item.total_movimientos || 0), 0);
+                const activeOperators = new Set(filteredData.map(item => item.usuario)).size;
+                const daysWithData = new Set(filteredData.map(item => item.dia)).size;
+
+                return {
+                    avgProductivity,
+                    totalMovements,
+                    activeOperators,
+                    daysWithData
+                };
+            }, [filteredData]);
+
+            // Prepare Chart Data - Tendencia
+            const tendenciaData = useMemo(() => {
+                const groupedByDate = {};
+
+                filteredData.forEach(item => {
+                    if (!groupedByDate[item.dia]) {
+                        groupedByDate[item.dia] = {
+                            fecha: item.dia,
+                            productividad: 0,
+                            count: 0
+                        };
+                    }
+                    groupedByDate[item.dia].productividad += item.productividad_hora || 0;
+                    groupedByDate[item.dia].count += 1;
+                });
+
+                return Object.values(groupedByDate)
+                    .map(item => ({
+                        fecha: formatDate(item.fecha),
+                        'LPN/Hora': parseFloat((item.productividad / item.count).toFixed(2))
+                    }))
+                    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            }, [filteredData]);
+
+            // Prepare Chart Data - Por Cargo
+            const cargoData = useMemo(() => {
+                const groupedByCargo = {};
+
+                filteredData.forEach(item => {
+                    if (!groupedByCargo[item.cargo]) {
+                        groupedByCargo[item.cargo] = {
+                            cargo: item.cargo,
+                            productividad: 0,
+                            count: 0
+                        };
+                    }
+                    groupedByCargo[item.cargo].productividad += item.productividad_hora || 0;
+                    groupedByCargo[item.cargo].count += 1;
+                });
+
+                return Object.values(groupedByCargo)
+                    .map(item => ({
+                        name: item.cargo,
+                        'LPN/Hora': parseFloat((item.productividad / item.count).toFixed(2))
+                    }))
+                    .sort((a, b) => b['LPN/Hora'] - a['LPN/Hora']);
+            }, [filteredData]);
+
+            // Prepare Chart Data - Distribucion
+            const distribucionData = useMemo(() => {
+                const groupedByDate = {};
+
+                filteredData.forEach(item => {
+                    if (!groupedByDate[item.dia]) {
+                        groupedByDate[item.dia] = {
+                            fecha: formatDate(item.dia),
+                            'Cajas': 0,
+                            'Destino': 0
+                        };
+                    }
+                    groupedByDate[item.dia]['Cajas'] += item.mov_cajas || 0;
+                    groupedByDate[item.dia]['Destino'] += item.mov_destino || 0;
+                });
+
+                return Object.values(groupedByDate)
+                    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+                    .slice(-20);
+            }, [filteredData]);
+
+            // Prepare Ranking Data
+            const rankingData = useMemo(() => {
+                const groupedByOperator = {};
+
+                filteredData.forEach(item => {
+                    if (!groupedByOperator[item.usuario]) {
+                        groupedByOperator[item.usuario] = {
+                            usuario: item.usuario,
+                            nombre: item.nombre,
+                            cargo: item.cargo,
+                            productividad: 0,
+                            total_movimientos: 0,
+                            dias: new Set(),
+                            count: 0
+                        };
+                    }
+                    groupedByOperator[item.usuario].productividad += item.productividad_hora || 0;
+                    groupedByOperator[item.usuario].total_movimientos += item.total_movimientos || 0;
+                    groupedByOperator[item.usuario].dias.add(item.dia);
+                    groupedByOperator[item.usuario].count += 1;
+                });
+
+                return Object.values(groupedByOperator)
+                    .map(item => ({
+                        ...item,
+                        productividad_promedio: item.count > 0 ? item.productividad / item.count : 0,
+                        dias_trabajados: item.dias.size
+                    }))
+                    .sort((a, b) => b.productividad_promedio - a.productividad_promedio);
+            }, [filteredData]);
+
+            // Get unique cargos
+            const uniqueCargos = useMemo(() => {
+                const cargos = new Set(allData.map(item => item.cargo));
+                return Array.from(cargos).sort();
+            }, [allData]);
+
+            const COLORS = ['#0E245E', '#192853', '#10B981', '#5E6373', '#AEAEB8'];
+
+            if (loading) {
+                return (
+                    <>
+                        <Header />
+                        <LoadingSkeleton />
+                    </>
+                );
+            }
+
+            return (
+                <>
+                    <Header />
+                    <div className="container">
+                        <h1 className="page-title">Productividad ALM</h1>
+
+                        {error && <div className="error-message">{error}</div>}
+
+                        {/* Filters Bar */}
+                        <div className="filters-bar">
+                            <div className="filter-group">
+                                <label>Desde</label>
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => {
+                                        setDateFrom(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                            </div>
+                            <div className="filter-group">
+                                <label>Hasta</label>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => {
+                                        setDateTo(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                            </div>
+                            <div className="filter-group">
+                                <label>Cargo</label>
+                                <select
+                                    value={selectedCargo}
+                                    onChange={(e) => {
+                                        setSelectedCargo(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value="Todos">Todos</option>
+                                    {uniqueCargos.map(cargo => (
+                                        <option key={cargo} value={cargo}>{cargo}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="filter-group">
+                                <label>Vista por Periodo</label>
+                                <select
+                                    value={periodView}
+                                    onChange={(e) => setPeriodView(e.target.value)}
+                                >
+                                    <option value="Diario">Diario</option>
+                                    <option value="Semanal">Semanal</option>
+                                    <option value="Mensual">Mensual</option>
+                                </select>
+                            </div>
+                            <button className="btn-apply">Aplicar Filtros</button>
+                        </div>
+
+                        {/* KPI Cards */}
+                        <div className="kpi-section">
+                            <KPICard
+                                label="Promedio LPN/Hora"
+                                value={formatChileanNumber(kpis.avgProductivity)}
+                                subtitle="Promedio general"
+                            />
+                            <KPICard
+                                label="Total Movimientos"
+                                value={kpis.totalMovements.toLocaleString('es-CL')}
+                                subtitle="Periodo seleccionado"
+                            />
+                            <KPICard
+                                label="Operarios Activos"
+                                value={kpis.activeOperators}
+                                subtitle="Operarios únicos"
+                            />
+                            <KPICard
+                                label="Dias con Data"
+                                value={kpis.daysWithData}
+                                subtitle="Dias registrados"
+                            />
+                        </div>
+
+                        {/* Charts */}
+                        {filteredData.length > 0 ? (
+                            <div className="charts-grid">
+                                {/* Tendencia Chart */}
+                                <div className="chart-card">
+                                    <h3 className="chart-title">Tendencia de Productividad</h3>
+                                    <div className="chart-container">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={tendenciaData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
+                                                <XAxis dataKey="fecha" stroke="#5E6373" />
+                                                <YAxis stroke="#5E6373" />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        backgroundColor: '#FFFEFF',
+                                                        border: '1px solid #AEAEB8',
+                                                        borderRadius: '8px'
+                                                    }}
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="LPN/Hora"
+                                                    stroke="#0E245E"
+                                                    dot={{ fill: '#10B981', r: 4 }}
+                                                    activeDot={{ r: 6 }}
+                                                    strokeWidth={2}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Cargo Chart */}
+                                <div className="chart-card">
+                                    <h3 className="chart-title">Productividad por Cargo</h3>
+                                    <div className="chart-container">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={cargoData} layout="vertical" margin={{ top: 5, right: 30, left: 150, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
+                                                <XAxis type="number" stroke="#5E6373" />
+                                                <YAxis type="category" dataKey="name" stroke="#5E6373" width={140} />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        backgroundColor: '#FFFEFF',
+                                                        border: '1px solid #AEAEB8',
+                                                        borderRadius: '8px'
+                                                    }}
+                                                />
+                                                <Bar dataKey="LPN/Hora" fill="#0E245E" radius={[0, 8, 8, 0]}>
+                                                    {cargoData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Distribucion Chart */}
+                                <div className="chart-card" style={{ gridColumn: 'span 1' }}>
+                                    <h3 className="chart-title">Distribución de Movimientos</h3>
+                                    <div className="chart-container">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={distribucionData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
+                                                <XAxis dataKey="fecha" stroke="#5E6373" angle={-45} textAnchor="end" height={80} />
+                                                <YAxis stroke="#5E6373" />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        backgroundColor: '#FFFEFF',
+                                                        border: '1px solid #AEAEB8',
+                                                        borderRadius: '8px'
+                                                    }}
+                                                />
+                                                <Legend />
+                                                <Bar dataKey="Cajas" stackId="a" fill="#0E245E" />
+                                                <Bar dataKey="Destino" stackId="a" fill="#10B981" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="no-data">
+                                <div className="no-data-icon">📊</div>
+                                <p>No hay datos disponibles para los filtros seleccionados</p>
+                            </div>
+                        )}
+
+                        {/* Ranking Table */}
+                        {rankingData.length > 0 && (
+                            <RankingTable
+                                data={rankingData}
+                                currentPage={currentPage}
+                                itemsPerPage={10}
+                                onPageChange={setCurrentPage}
+                                searchTerm={searchTerm}
+                                onSearchChange={setSearchTerm}
+                            />
+                        )}
+
+                        <div style={{ height: '2rem' }}></div>
+                    </div>
+                </>
+            );
+        };
+
+        // Render App
+        ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+    </script>
 </body>
 </html>

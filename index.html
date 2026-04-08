@@ -426,7 +426,7 @@ function mapColumns(rows, type) {
         flexMap[normalize(excelCol)] = { originalKey: excelCol, dbCol };
     }
 
-    return rows.map(row => {
+    let result = rows.map(row => {
         const mapped = {};
         for (const [rawCol, rawVal] of Object.entries(row)) {
             const norm = normalize(rawCol);
@@ -465,6 +465,27 @@ function mapColumns(rows, type) {
         // Solo filas con datos clave
         return row.id_lpn && row.fecha_mod && row.usuario;
     });
+
+    // Deduplicar filas dentro del mismo archivo (evita error 409 en Supabase)
+    const dedupKeys = {
+        cajas: (r) => [r.id_lpn, r.ubicacion, r.ubicacion_prev, r.usuario, r.fecha_mod].join('|'),
+        destino: (r) => [r.id_lpn, r.ubic_anterior, r.ubic_actual, r.usuario, r.fecha_mod].join('|'),
+    };
+    const keyFn = dedupKeys[type];
+    if (keyFn) {
+        const seen = new Set();
+        const beforeCount = result.length;
+        result = result.filter(row => {
+            const key = keyFn(row);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+        const removed = beforeCount - result.length;
+        if (removed > 0) log('info', 'Deduplicacion: ' + removed.toLocaleString('es-CL') + ' filas duplicadas removidas del archivo');
+    }
+
+    return result;
 }
 
 function updateFileCount() {

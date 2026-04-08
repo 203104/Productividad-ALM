@@ -713,6 +713,7 @@
             const [dateFrom, setDateFrom] = useState('');
             const [dateTo, setDateTo] = useState('');
             const [selectedCargo, setSelectedCargo] = useState('Todos');
+            const [selectedOperario, setSelectedOperario] = useState('Todos');
             const [periodView, setPeriodView] = useState('Diario');
             const [currentPage, setCurrentPage] = useState(1);
             const [searchTerm, setSearchTerm] = useState('');
@@ -764,10 +765,11 @@
                     if (fromDate && itemDate < fromDate) return false;
                     if (toDate && itemDate > toDate) return false;
                     if (selectedCargo !== 'Todos' && item.cargo !== selectedCargo) return false;
+                    if (selectedOperario !== 'Todos' && item.usuario !== selectedOperario) return false;
 
                     return true;
                 });
-            }, [allData, dateFrom, dateTo, selectedCargo]);
+            }, [allData, dateFrom, dateTo, selectedCargo, selectedOperario]);
 
             // Calculate KPIs
             const kpis = useMemo(() => {
@@ -899,6 +901,20 @@
                 return Array.from(cargos).sort();
             }, [allData]);
 
+            // Get unique operarios (filtered by selected cargo)
+            const uniqueOperarios = useMemo(() => {
+                const filtered = selectedCargo !== 'Todos'
+                    ? allData.filter(item => item.cargo === selectedCargo)
+                    : allData;
+                const ops = new Map();
+                filtered.forEach(item => {
+                    if (!ops.has(item.usuario)) {
+                        ops.set(item.usuario, item.nombre || item.usuario);
+                    }
+                });
+                return Array.from(ops.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+            }, [allData, selectedCargo]);
+
             const COLORS = ['#0E245E', '#192853', '#10B981', '#5E6373', '#AEAEB8'];
 
             if (loading) {
@@ -948,12 +964,28 @@
                                     value={selectedCargo}
                                     onChange={(e) => {
                                         setSelectedCargo(e.target.value);
+                                        setSelectedOperario('Todos');
                                         setCurrentPage(1);
                                     }}
                                 >
                                     <option value="Todos">Todos</option>
                                     {uniqueCargos.map(cargo => (
                                         <option key={cargo} value={cargo}>{cargo}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="filter-group">
+                                <label>Operario</label>
+                                <select
+                                    value={selectedOperario}
+                                    onChange={(e) => {
+                                        setSelectedOperario(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value="Todos">Todos</option>
+                                    {uniqueOperarios.map(([usuario, nombre]) => (
+                                        <option key={usuario} value={usuario}>{nombre}</option>
                                     ))}
                                 </select>
                             </div>

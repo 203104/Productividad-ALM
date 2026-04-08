@@ -643,6 +643,27 @@ async function startUpload() {
         log('error', 'No se detecto rango de fechas en los datos subidos');
     }
 
+    // ── PASO 2.5: Actualizar resumen semanal ───────────────────
+    let weeklyCount = 0;
+    if (dateRange && prodCount > 0) {
+        setProgressState('weekly', 'running', 'Actualizando resumen semanal...', 50);
+        log('info', 'Resumiendo productividad semanal del ' + dateRange.desde + ' al ' + dateRange.hasta + '...');
+        try {
+            const wkResult = await callRPC('fn_3_actualizar_productividad_semanal', {
+                p_fecha_desde: dateRange.desde,
+                p_fecha_hasta: dateRange.hasta
+            });
+            weeklyCount = wkResult || 0;
+            setProgressState('weekly', 'done', weeklyCount + ' registros semanales actualizados', 100);
+            log('success', 'Resumen semanal: ' + weeklyCount + ' registros operario/semana actualizados');
+        } catch (err) {
+            setProgressState('weekly', 'error', 'Error: ' + err.message, 100);
+            log('error', 'Error actualizando resumen semanal: ' + err.message);
+        }
+    } else {
+        setProgressState('weekly', 'done', 'Sin datos nuevos para resumir', 100);
+    }
+
     // ── PASO 3: Limpieza de data antigua ──────────────────────
     setProgressState('clean', 'running', 'Eliminando historial crudo mayor a 2 meses...', 50);
     log('info', 'Ejecutando limpieza de data cruda mayor a 2 meses...');
@@ -672,7 +693,8 @@ async function startUpload() {
     document.getElementById('summaryStats').innerHTML =
         '<div class="summary-stat"><div class="summary-stat-value">' + totalInserted.toLocaleString('es-CL') + '</div><div class="summary-stat-label">filas procesadas</div></div>' +
         (totalErrors > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--error)">' + totalErrors.toLocaleString('es-CL') + '</div><div class="summary-stat-label">filas con error</div></div>' : '') +
-        (prodCount > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--success)">' + prodCount + '</div><div class="summary-stat-label">productividades calculadas</div></div>' : '') +
+        (prodCount > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--success)">' + prodCount + '</div><div class="summary-stat-label">productividades diarias</div></div>' : '') +
+        (weeklyCount > 0 ? '<div class="summary-stat"><div class="summary-stat-value" style="color:var(--success)">' + weeklyCount + '</div><div class="summary-stat-label">resumen semanal</div></div>' : '') +
         Object.entries(results).map(function(entry) {
             return '<div class="summary-stat"><div class="summary-stat-value">' + entry[1].inserted.toLocaleString('es-CL') + '</div><div class="summary-stat-label">' + LABEL_MAP[entry[0]] + '</div></div>';
         }).join('');

@@ -293,14 +293,33 @@ const COLUMN_MAP = {
         'ID LPN': 'id_lpn',
         'PRODUCTO': 'producto',
         'EMPRESA PROD': 'empresa_prod',
+        'EMPRESA PROD.': 'empresa_prod',
         'UBIC ACT.': 'ubic_actual',
         'UBIC ACT': 'ubic_actual',
+        'UBIC. ACT.': 'ubic_actual',
+        'UBIC. ACT': 'ubic_actual',
+        'UBICACION ACTUAL': 'ubic_actual',
+        'UBICACION ACT': 'ubic_actual',
         'UBIC ANT.': 'ubic_anterior',
         'UBIC ANT': 'ubic_anterior',
+        'UBIC. ANT.': 'ubic_anterior',
+        'UBIC. ANT': 'ubic_anterior',
+        'UBICACION ANTERIOR': 'ubic_anterior',
+        'UBICACION ANT': 'ubic_anterior',
         'FECHA ULT MOD': 'fecha_mod',
         'FECHA ULT MOD.': 'fecha_mod',
+        'FECHA ULT. MOD': 'fecha_mod',
+        'FECHA ULT. MOD.': 'fecha_mod',
+        'FECHA ULTIMA MOD': 'fecha_mod',
+        'FECHA ULTIMA MOD.': 'fecha_mod',
+        'FECHA MOD': 'fecha_mod',
+        'FECHA MOD.': 'fecha_mod',
         'USUARIO ULTIMA MOD': 'usuario',
         'USUARIO ULTIMA MOD.': 'usuario',
+        'USUARIO ULT MOD': 'usuario',
+        'USUARIO ULT MOD.': 'usuario',
+        'USUARIO ULT. MOD': 'usuario',
+        'USUARIO ULT. MOD.': 'usuario',
     }
 };
 
@@ -390,14 +409,33 @@ function mapColumns(rows, type) {
     const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const semanaCarga = months[new Date().getMonth()] + ' ' + new Date().getFullYear();
 
+    // Log columnas del archivo para diagnostico
+    if (rows.length > 0) {
+        const fileCols = Object.keys(rows[0]);
+        log('info', 'Columnas detectadas en archivo (' + type + '): ' + fileCols.join(', '));
+        const mappedCols = fileCols.filter(c => colMap[c]);
+        const unmappedCols = fileCols.filter(c => !colMap[c]);
+        log('info', 'Columnas mapeadas: ' + (mappedCols.length > 0 ? mappedCols.join(', ') : 'NINGUNA'));
+        if (unmappedCols.length > 0) log('info', 'Columnas sin mapear: ' + unmappedCols.join(', '));
+    }
+
+    // Crear lookup flexible: normalizar nombres quitando puntos, espacios extra, etc.
+    const normalize = (s) => s.toUpperCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+    const flexMap = {};
+    for (const [excelCol, dbCol] of Object.entries(colMap)) {
+        flexMap[normalize(excelCol)] = { originalKey: excelCol, dbCol };
+    }
+
     return rows.map(row => {
         const mapped = {};
-        for (const [excelCol, dbCol] of Object.entries(colMap)) {
-            if (row[excelCol] !== undefined && row[excelCol] !== null && !mapped[dbCol]) {
-                let val = row[excelCol];
+        for (const [rawCol, rawVal] of Object.entries(row)) {
+            const norm = normalize(rawCol);
+            const match = flexMap[norm];
+            if (match && rawVal !== undefined && rawVal !== null && !mapped[match.dbCol]) {
+                let val = rawVal;
 
                 // Fecha -> ISO string
-                if (dbCol === 'fecha_mod' && val) {
+                if (match.dbCol === 'fecha_mod' && val) {
                     if (val instanceof Date) {
                         val = val.toISOString();
                     } else if (typeof val === 'string' && !val.includes('T')) {
@@ -414,11 +452,11 @@ function mapColumns(rows, type) {
                 }
 
                 // Strings
-                if (['id_lpn','usuario','producto','empresa_prod','ubicacion','ubicacion_prev','ubic_actual','ubic_anterior','mar_qa'].includes(dbCol) && val !== null) {
+                if (['id_lpn','usuario','producto','empresa_prod','ubicacion','ubicacion_prev','ubic_actual','ubic_anterior','mar_qa'].includes(match.dbCol) && val !== null) {
                     val = String(val).trim();
                 }
 
-                mapped[dbCol] = val;
+                mapped[match.dbCol] = val;
             }
         }
         mapped.semana_carga = semanaCarga;

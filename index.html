@@ -336,6 +336,10 @@ const CARD_MAP = {
     destino: 'cardDestino',
 };
 const CAP_MAP = { cajas: 'Cajas', destino: 'Destino' };
+const CONFLICT_MAP = {
+    cajas: 'id_lpn,ubicacion_prev,ubicacion,usuario,fecha_mod',
+    destino: 'id_lpn,ubic_anterior,ubic_actual,usuario,fecha_mod',
+};
 
 // ============================================================
 // STATE
@@ -626,7 +630,10 @@ async function startUpload() {
         for (let i = 0; i < total; i += BATCH_SIZE) {
             const batch = data.slice(i, i + BATCH_SIZE);
             try {
-                const response = await fetch(SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table), {
+                const conflictCols = CONFLICT_MAP[type] || '';
+                const url = SUPABASE_URL + '/rest/v1/' + encodeURIComponent(table) +
+                    (conflictCols ? '?on_conflict=' + conflictCols : '');
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

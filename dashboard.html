@@ -546,7 +546,7 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine } = window.Recharts;
+        const { ComposedChart, LineChart, Line, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine } = window.Recharts;
 
         // Supabase Configuration
         const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
@@ -1303,22 +1303,38 @@
                                         </div>
                                         <div className="chart-container-large">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={tendenciaCargoData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                                <ComposedChart data={tendenciaCargoData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                                    <defs>
+                                                        {tendenciaCargoData.cargos.map((cargo, i) => (
+                                                            <linearGradient key={'grad-' + cargo} id={'grad-' + i} x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor={CARGO_COLORS[i % CARGO_COLORS.length]} stopOpacity={0.25} />
+                                                                <stop offset="95%" stopColor={CARGO_COLORS[i % CARGO_COLORS.length]} stopOpacity={0.03} />
+                                                            </linearGradient>
+                                                        ))}
+                                                    </defs>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
                                                     <XAxis dataKey="fecha" stroke="#5E6373" />
                                                     <YAxis stroke="#5E6373" />
                                                     <Tooltip contentStyle={{ backgroundColor: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px' }} />
                                                     <ReferenceLine y={30} stroke="#EF4444" strokeWidth={2} strokeDasharray="8 4"
                                                         label={{ value: 'Meta 30', position: 'right', fill: '#EF4444', fontWeight: 600, fontSize: 12 }} />
-                                                    {visibleCargos.map((cargo, i) => {
+                                                    {visibleCargos.map((cargo) => {
                                                         const origIdx = tendenciaCargoData.cargos.indexOf(cargo);
                                                         return (
-                                                            <Line key={cargo} type="monotone" dataKey={cargo}
+                                                            <Area key={'area-' + cargo} type="monotone" dataKey={cargo}
+                                                                fill={'url(#grad-' + origIdx + ')'}
+                                                                stroke="none" connectNulls />
+                                                        );
+                                                    })}
+                                                    {visibleCargos.map((cargo) => {
+                                                        const origIdx = tendenciaCargoData.cargos.indexOf(cargo);
+                                                        return (
+                                                            <Line key={'line-' + cargo} type="monotone" dataKey={cargo}
                                                                 stroke={CARGO_COLORS[origIdx % CARGO_COLORS.length]}
                                                                 dot={{ r: 3 }} activeDot={{ r: 5 }} strokeWidth={2} connectNulls />
                                                         );
                                                     })}
-                                                </LineChart>
+                                                </ComposedChart>
                                             </ResponsiveContainer>
                                         </div>
                                     </div>

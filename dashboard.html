@@ -619,42 +619,137 @@
             </div>
         );
 
-        // Ranking Table Component
-        const RankingTable = ({ data, currentPage, itemsPerPage, onPageChange, searchTerm, onSearchChange, isDaily }) => {
-            const filteredData = useMemo(() => {
-                return data.filter(item =>
-                    item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            }, [data, searchTerm]);
+        // Ranking Table Component with own period filter
+        const RankingTable = ({ rawData, isDaily, periodView }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentPage, setCurrentPage] = useState(1);
+            const [rankingPeriod, setRankingPeriod] = useState('Todos');
+            const itemsPerPage = 10;
 
+            const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+            // Build period options from available data
+            const periodOptions = useMemo(() => {
+                const opts = new Map();
+                rawData.forEach(item => {
+                    if (isDaily) {
+                        // Semanas
+                        const d = new Date(item.dia + 'T12:00:00');
+                        const weekNum = item.semana || Math.ceil((Math.floor((d - new Date(d.getFullYear(),0,1)) / 86400000) + new Date(d.getFullYear(),0,1).getDay() + 1) / 7);
+                        const yr = item.anio || d.getFullYear();
+                        const wKey = yr + '-S' + String(weekNum).padStart(2, '0');
+                        opts.set(wKey, 'Semana ' + weekNum + ' - ' + yr);
+                        // Meses
+                        const mesNum = item.mes || (d.getMonth() + 1);
+                        const mKey = yr + '-M' + String(mesNum).padStart(2, '0');
+                        opts.set(mKey, meses[mesNum] + ' ' + yr);
+                    } else {
+                        const wKey = item.anio + '-S' + String(item.semana).padStart(2, '0');
+                        opts.set(wKey, 'Semana ' + item.semana + ' - ' + item.anio);
+                        const mesIdx = typeof item.mes === 'string' ? ({'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12}[item.mes] || 0) : item.mes;
+                        if (mesIdx) {
+                            const mKey = item.anio + '-M' + String(mesIdx).padStart(2, '0');
+                            opts.set(mKey, meses[mesIdx] + ' ' + item.anio);
+                        }
+                    }
+                });
+                return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+            }, [rawData, isDaily]);
+
+            // Filter rawData by selected period
+            const periodFilteredData = useMemo(() => {
+                if (rankingPeriod === 'Todos') return rawData;
+                const isWeek = rankingPeriod.includes('-S');
+                const isMonth = rankingPeriod.includes('-M');
+                return rawData.filter(item => {
+                    if (isWeek) {
+                        const yr = isDaily ? (item.anio || new Date(item.dia + 'T12:00:00').getFullYear()) : item.anio;
+                        const wk = isDaily ? (item.semana || 0) : item.semana;
+                        return rankingPeriod === yr + '-S' + String(wk).padStart(2, '0');
+                    }
+                    if (isMonth) {
+                        const yr = isDaily ? (item.anio || new Date(item.dia + 'T12:00:00').getFullYear()) : item.anio;
+                        let mesNum;
+                        if (isDaily) {
+                            mesNum = item.mes || (new Date(item.dia + 'T12:00:00').getMonth() + 1);
+                        } else {
+                            mesNum = typeof item.mes === 'string' ? ({'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12}[item.mes] || 0) : item.mes;
+                        }
+                        return rankingPeriod === yr + '-M' + String(mesNum).padStart(2, '0');
+                    }
+                    return true;
+                });
+            }, [rawData, rankingPeriod, isDaily]);
+
+            // Group by operator
+            const rankingData = useMemo(() => {
+                const prodField = isDaily ? 'productividad_hora' : 'productividad';
+                const grouped = {};
+                periodFilteredData.forEach(item => {
+                    const key = item.nombre;
+                    if (!grouped[key]) grouped[key] = { nombre: item.nombre, cargo: item.cargo, productividad: 0, periodos: new Set(), count: 0 };
+                    grouped[key].productividad += parseFloat(item[prodField] || 0);
+                    grouped[key].count += 1;
+                    if (isDaily) {
+                        grouped[key].periodos.add(item.dia);
+                    } else {
+                        grouped[key].periodos.add('S' + item.semana + '-' + item.anio);
+                    }
+                });
+                return Object.values(grouped)
+                    .map(item => ({
+                        ...item,
+                        productividad_promedio: item.count > 0 ? item.productividad / item.count : 0,
+                        periodos_trabajados: item.periodos.size
+                    }))
+                    .sort((a, b) => b.productividad_promedio - a.productividad_promedio);
+            }, [periodFilteredData, isDaily]);
+
+            const searchFiltered = useMemo(() => {
+                return rankingData.filter(item => item.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
+            }, [rankingData, searchTerm]);
+
+            const totalPages = Math.ceil(searchFiltered.length / itemsPerPage);
             const paginatedData = useMemo(() => {
                 const start = (currentPage - 1) * itemsPerPage;
-                return filteredData.slice(start, start + itemsPerPage);
-            }, [filteredData, currentPage, itemsPerPage]);
-
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+                return searchFiltered.slice(start, start + itemsPerPage);
+            }, [searchFiltered, currentPage, itemsPerPage]);
 
             return (
                 <div className="table-section">
-                    <div className="table-header">
+                    <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
+                        <select
+                            value={rankingPeriod}
+                            onChange={(e) => { setRankingPeriod(e.target.value); setCurrentPage(1); }}
+                            style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #AEAEB8', fontSize: '0.85rem', backgroundColor: '#fff', color: '#192853', fontWeight: 500 }}
+                        >
+                            <option value="Todos">Todos los periodos</option>
+                            <optgroup label="Meses">
+                                {periodOptions.filter(([k]) => k.includes('-M')).map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Semanas">
+                                {periodOptions.filter(([k]) => k.includes('-S')).map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                ))}
+                            </optgroup>
+                        </select>
                         <div className="table-search">
                             <input
                                 type="text"
                                 placeholder="Buscar por nombre..."
                                 value={searchTerm}
-                                onChange={(e) => {
-                                    onSearchChange(e.target.value);
-                                    onPageChange(1);
-                                }}
+                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
                     </div>
 
-                    {filteredData.length === 0 ? (
+                    {searchFiltered.length === 0 ? (
                         <div className="no-data">
                             <div className="no-data-icon">📭</div>
-                            <p>No hay datos disponibles</p>
+                            <p>No hay datos disponibles para el periodo seleccionado</p>
                         </div>
                     ) : (
                         <>
@@ -683,27 +778,11 @@
 
                             {totalPages > 1 && (
                                 <div className="pagination">
-                                    <button
-                                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                                        disabled={currentPage === 1}
-                                    >
-                                        ← Anterior
-                                    </button>
+                                    <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>← Anterior</button>
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                        <button
-                                            key={page}
-                                            onClick={() => onPageChange(page)}
-                                            className={page === currentPage ? 'active' : ''}
-                                        >
-                                            {page}
-                                        </button>
+                                        <button key={page} onClick={() => setCurrentPage(page)} className={page === currentPage ? 'active' : ''}>{page}</button>
                                     ))}
-                                    <button
-                                        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        Siguiente →
-                                    </button>
+                                    <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>Siguiente →</button>
                                 </div>
                             )}
                         </>
@@ -723,8 +802,6 @@
             const [selectedCargo, setSelectedCargo] = useState('Todos');
             const [selectedOperario, setSelectedOperario] = useState('Todos');
             const [periodView, setPeriodView] = useState('Semanal');
-            const [currentPage, setCurrentPage] = useState(1);
-            const [searchTerm, setSearchTerm] = useState('');
             const [excludeWeekends, setExcludeWeekends] = useState(true);
             const [recalculating, setRecalculating] = useState(false);
 
@@ -955,31 +1032,7 @@
                 return { data, cargos };
             }, [filteredData, periodView, isDaily]);
 
-            // Prepare Ranking Data
-            const rankingData = useMemo(() => {
-                const prodField = isDaily ? 'productividad_hora' : 'productividad';
-                const groupedByOperator = {};
-                filteredData.forEach(item => {
-                    const key = item.nombre;
-                    if (!groupedByOperator[key]) {
-                        groupedByOperator[key] = { nombre: item.nombre, cargo: item.cargo, productividad: 0, periodos: new Set(), count: 0 };
-                    }
-                    groupedByOperator[key].productividad += parseFloat(item[prodField] || 0);
-                    if (isDaily) {
-                        groupedByOperator[key].periodos.add(item.dia);
-                    } else {
-                        groupedByOperator[key].periodos.add('S' + item.semana + '-' + item.anio);
-                    }
-                    groupedByOperator[key].count += 1;
-                });
-                return Object.values(groupedByOperator)
-                    .map(item => ({
-                        ...item,
-                        productividad_promedio: item.count > 0 ? item.productividad / item.count : 0,
-                        periodos_trabajados: item.periodos.size
-                    }))
-                    .sort((a, b) => b.productividad_promedio - a.productividad_promedio);
-            }, [filteredData, isDaily]);
+            // rankingData now computed inside RankingTable component
 
             // Get unique cargos (from both sources)
             const uniqueCargos = useMemo(() => {
@@ -1219,15 +1272,11 @@
                         )}
 
                         {/* Ranking Table */}
-                        {rankingData.length > 0 && (
+                        {filteredData.length > 0 && (
                             <RankingTable
-                                data={rankingData}
-                                currentPage={currentPage}
-                                itemsPerPage={5}
-                                onPageChange={setCurrentPage}
-                                searchTerm={searchTerm}
-                                onSearchChange={setSearchTerm}
+                                rawData={filteredData}
                                 isDaily={isDaily}
+                                periodView={periodView}
                             />
                         )}
 

@@ -803,6 +803,8 @@
             const [periodView, setPeriodView] = useState('Semanal');
             const [excludeWeekends, setExcludeWeekends] = useState(true);
             const [recalculating, setRecalculating] = useState(false);
+            const [activeCargos, setActiveCargos] = useState(new Set());
+            const [cargosInitialized, setCargosInitialized] = useState(false);
 
             // Recalcular productividad desde la vista (incluye minutas)
             const handleRecalculate = async () => {
@@ -1240,28 +1242,88 @@
                                 </div>
                             </div>
 
-                            {/* Tendencia por Cargo - Full Width */}
-                            <div className="chart-card" style={{ marginBottom: '2rem' }}>
-                                <h3 className="chart-title">Tendencia por Cargo</h3>
-                                <div className="chart-container-large">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={tendenciaCargoData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
-                                            <XAxis dataKey="fecha" stroke="#5E6373" />
-                                            <YAxis stroke="#5E6373" />
-                                            <Tooltip contentStyle={{ backgroundColor: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px' }} />
-                                            <Legend />
-                                            <ReferenceLine y={30} stroke="#EF4444" strokeWidth={2} strokeDasharray="8 4"
-                                                label={{ value: 'Meta 30', position: 'right', fill: '#EF4444', fontWeight: 600, fontSize: 12 }} />
-                                            {tendenciaCargoData.cargos.map((cargo, i) => (
-                                                <Line key={cargo} type="monotone" dataKey={cargo}
-                                                    stroke={CARGO_COLORS[i % CARGO_COLORS.length]}
-                                                    dot={{ r: 3 }} activeDot={{ r: 5 }} strokeWidth={2} connectNulls />
-                                            ))}
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
+                            {/* Tendencia por Cargo - Full Width with toggle chips */}
+                            {(() => {
+                                // Initialize activeCargos with all cargos on first render
+                                if (!cargosInitialized && tendenciaCargoData.cargos.length > 0) {
+                                    setTimeout(() => {
+                                        setActiveCargos(new Set(tendenciaCargoData.cargos));
+                                        setCargosInitialized(true);
+                                    }, 0);
+                                }
+                                const toggleCargo = (cargo) => {
+                                    setActiveCargos(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(cargo)) next.delete(cargo);
+                                        else next.add(cargo);
+                                        return next;
+                                    });
+                                };
+                                const visibleCargos = tendenciaCargoData.cargos.filter(c => activeCargos.has(c));
+                                return (
+                                    <div className="chart-card" style={{ marginBottom: '2rem' }}>
+                                        <h3 className="chart-title">Tendencia por Cargo</h3>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                                            {tendenciaCargoData.cargos.map((cargo, i) => {
+                                                const color = CARGO_COLORS[i % CARGO_COLORS.length];
+                                                const isActive = activeCargos.has(cargo);
+                                                return (
+                                                    <button key={cargo} onClick={() => toggleCargo(cargo)}
+                                                        style={{
+                                                            padding: '0.35rem 0.8rem',
+                                                            borderRadius: '20px',
+                                                            border: '2px solid ' + color,
+                                                            backgroundColor: isActive ? color : 'transparent',
+                                                            color: isActive ? '#fff' : color,
+                                                            fontSize: '0.78rem',
+                                                            fontWeight: 600,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease',
+                                                            opacity: isActive ? 1 : 0.5
+                                                        }}
+                                                    >{cargo}</button>
+                                                );
+                                            })}
+                                            <button onClick={() => {
+                                                if (activeCargos.size === tendenciaCargoData.cargos.length) setActiveCargos(new Set());
+                                                else setActiveCargos(new Set(tendenciaCargoData.cargos));
+                                            }}
+                                                style={{
+                                                    padding: '0.35rem 0.8rem',
+                                                    borderRadius: '20px',
+                                                    border: '2px solid #5E6373',
+                                                    backgroundColor: activeCargos.size === tendenciaCargoData.cargos.length ? '#5E6373' : 'transparent',
+                                                    color: activeCargos.size === tendenciaCargoData.cargos.length ? '#fff' : '#5E6373',
+                                                    fontSize: '0.78rem',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >{activeCargos.size === tendenciaCargoData.cargos.length ? 'Quitar todos' : 'Seleccionar todos'}</button>
+                                        </div>
+                                        <div className="chart-container-large">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={tendenciaCargoData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
+                                                    <XAxis dataKey="fecha" stroke="#5E6373" />
+                                                    <YAxis stroke="#5E6373" />
+                                                    <Tooltip contentStyle={{ backgroundColor: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px' }} />
+                                                    <ReferenceLine y={30} stroke="#EF4444" strokeWidth={2} strokeDasharray="8 4"
+                                                        label={{ value: 'Meta 30', position: 'right', fill: '#EF4444', fontWeight: 600, fontSize: 12 }} />
+                                                    {visibleCargos.map((cargo, i) => {
+                                                        const origIdx = tendenciaCargoData.cargos.indexOf(cargo);
+                                                        return (
+                                                            <Line key={cargo} type="monotone" dataKey={cargo}
+                                                                stroke={CARGO_COLORS[origIdx % CARGO_COLORS.length]}
+                                                                dot={{ r: 3 }} activeDot={{ r: 5 }} strokeWidth={2} connectNulls />
+                                                        );
+                                                    })}
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             </>
                         ) : (
                             <div className="no-data">

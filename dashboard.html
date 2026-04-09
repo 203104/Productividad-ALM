@@ -623,63 +623,65 @@
         const RankingTable = ({ rawData, isDaily, periodView }) => {
             const [searchTerm, setSearchTerm] = useState('');
             const [currentPage, setCurrentPage] = useState(1);
-            const [rankingPeriod, setRankingPeriod] = useState('Todos');
+            const [selectedMes, setSelectedMes] = useState('Todos');
+            const [selectedSemana, setSelectedSemana] = useState('Todos');
             const itemsPerPage = 10;
 
             const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            const mesToNumMap = {'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12};
 
-            // Build period options from available data
-            const periodOptions = useMemo(() => {
+            // Helper: get mes/semana/anio from item
+            const getItemMeta = (item) => {
+                if (isDaily) {
+                    return { mes: item.mes || (new Date(item.dia + 'T12:00:00').getMonth() + 1), semana: item.semana || 0, anio: item.anio || new Date(item.dia + 'T12:00:00').getFullYear() };
+                } else {
+                    const mesNum = typeof item.mes === 'string' ? (mesToNumMap[item.mes] || 0) : item.mes;
+                    return { mes: mesNum, semana: item.semana, anio: item.anio };
+                }
+            };
+
+            // Build month options
+            const monthOptions = useMemo(() => {
                 const opts = new Map();
                 rawData.forEach(item => {
-                    if (isDaily) {
-                        // Semanas
-                        const d = new Date(item.dia + 'T12:00:00');
-                        const weekNum = item.semana || Math.ceil((Math.floor((d - new Date(d.getFullYear(),0,1)) / 86400000) + new Date(d.getFullYear(),0,1).getDay() + 1) / 7);
-                        const yr = item.anio || d.getFullYear();
-                        const wKey = yr + '-S' + String(weekNum).padStart(2, '0');
-                        opts.set(wKey, 'Semana ' + weekNum + ' - ' + yr);
-                        // Meses
-                        const mesNum = item.mes || (d.getMonth() + 1);
-                        const mKey = yr + '-M' + String(mesNum).padStart(2, '0');
-                        opts.set(mKey, meses[mesNum] + ' ' + yr);
-                    } else {
-                        const wKey = item.anio + '-S' + String(item.semana).padStart(2, '0');
-                        opts.set(wKey, 'Semana ' + item.semana + ' - ' + item.anio);
-                        const mesIdx = typeof item.mes === 'string' ? ({'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12}[item.mes] || 0) : item.mes;
-                        if (mesIdx) {
-                            const mKey = item.anio + '-M' + String(mesIdx).padStart(2, '0');
-                            opts.set(mKey, meses[mesIdx] + ' ' + item.anio);
-                        }
-                    }
+                    const m = getItemMeta(item);
+                    const key = m.anio + '-' + String(m.mes).padStart(2, '0');
+                    opts.set(key, meses[m.mes] + ' ' + m.anio);
                 });
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily]);
 
-            // Filter rawData by selected period
-            const periodFilteredData = useMemo(() => {
-                if (rankingPeriod === 'Todos') return rawData;
-                const isWeek = rankingPeriod.includes('-S');
-                const isMonth = rankingPeriod.includes('-M');
-                return rawData.filter(item => {
-                    if (isWeek) {
-                        const yr = isDaily ? (item.anio || new Date(item.dia + 'T12:00:00').getFullYear()) : item.anio;
-                        const wk = isDaily ? (item.semana || 0) : item.semana;
-                        return rankingPeriod === yr + '-S' + String(wk).padStart(2, '0');
+            // Build week options (filtered by selected month)
+            const weekOptions = useMemo(() => {
+                const opts = new Map();
+                rawData.forEach(item => {
+                    const m = getItemMeta(item);
+                    // Si hay mes seleccionado, solo mostrar semanas de ese mes
+                    if (selectedMes !== 'Todos') {
+                        const mesKey = m.anio + '-' + String(m.mes).padStart(2, '0');
+                        if (mesKey !== selectedMes) return;
                     }
-                    if (isMonth) {
-                        const yr = isDaily ? (item.anio || new Date(item.dia + 'T12:00:00').getFullYear()) : item.anio;
-                        let mesNum;
-                        if (isDaily) {
-                            mesNum = item.mes || (new Date(item.dia + 'T12:00:00').getMonth() + 1);
-                        } else {
-                            mesNum = typeof item.mes === 'string' ? ({'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12}[item.mes] || 0) : item.mes;
-                        }
-                        return rankingPeriod === yr + '-M' + String(mesNum).padStart(2, '0');
+                    const key = m.anio + '-S' + String(m.semana).padStart(2, '0');
+                    opts.set(key, 'Semana ' + m.semana + ' - ' + m.anio);
+                });
+                return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+            }, [rawData, isDaily, selectedMes]);
+
+            // Filter rawData by selected month AND week
+            const periodFilteredData = useMemo(() => {
+                return rawData.filter(item => {
+                    const m = getItemMeta(item);
+                    if (selectedMes !== 'Todos') {
+                        const mesKey = m.anio + '-' + String(m.mes).padStart(2, '0');
+                        if (mesKey !== selectedMes) return false;
+                    }
+                    if (selectedSemana !== 'Todos') {
+                        const wKey = m.anio + '-S' + String(m.semana).padStart(2, '0');
+                        if (wKey !== selectedSemana) return false;
                     }
                     return true;
                 });
-            }, [rawData, rankingPeriod, isDaily]);
+            }, [rawData, selectedMes, selectedSemana, isDaily]);
 
             // Group by operator
             const rankingData = useMemo(() => {
@@ -715,26 +717,23 @@
                 return searchFiltered.slice(start, start + itemsPerPage);
             }, [searchFiltered, currentPage, itemsPerPage]);
 
+            const selectStyle = { padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #AEAEB8', fontSize: '0.85rem', backgroundColor: '#fff', color: '#192853', fontWeight: 500 };
+
             return (
                 <div className="table-section">
                     <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
-                        <select
-                            value={rankingPeriod}
-                            onChange={(e) => { setRankingPeriod(e.target.value); setCurrentPage(1); }}
-                            style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #AEAEB8', fontSize: '0.85rem', backgroundColor: '#fff', color: '#192853', fontWeight: 500 }}
-                        >
-                            <option value="Todos">Todos los periodos</option>
-                            <optgroup label="Meses">
-                                {periodOptions.filter(([k]) => k.includes('-M')).map(([key, label]) => (
-                                    <option key={key} value={key}>{label}</option>
-                                ))}
-                            </optgroup>
-                            <optgroup label="Semanas">
-                                {periodOptions.filter(([k]) => k.includes('-S')).map(([key, label]) => (
-                                    <option key={key} value={key}>{label}</option>
-                                ))}
-                            </optgroup>
+                        <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setCurrentPage(1); }} style={selectStyle}>
+                            <option value="Todos">Todos los meses</option>
+                            {monthOptions.map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                        <select value={selectedSemana} onChange={(e) => { setSelectedSemana(e.target.value); setCurrentPage(1); }} style={selectStyle}>
+                            <option value="Todos">Todas las semanas</option>
+                            {weekOptions.map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                            ))}
                         </select>
                         <div className="table-search">
                             <input

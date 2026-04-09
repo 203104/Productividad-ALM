@@ -537,7 +537,7 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
+        const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine } = window.Recharts;
 
         // Supabase Configuration
         const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
@@ -1022,8 +1022,20 @@
                                 <select
                                     value={selectedOperario}
                                     onChange={(e) => {
-                                        setSelectedOperario(e.target.value);
+                                        const op = e.target.value;
+                                        setSelectedOperario(op);
                                         setCurrentPage(1);
+                                        // Si seleccionó un operario, expandir fechas a todo su rango
+                                        if (op !== 'Todos') {
+                                            const allDates = [];
+                                            dailyData.filter(d => d.nombre === op).forEach(d => allDates.push(d.dia));
+                                            weeklyData.filter(d => d.nombre === op).forEach(d => allDates.push(weekToDate(d.anio, d.semana)));
+                                            allDates.sort();
+                                            if (allDates.length > 0) {
+                                                setDateFrom(allDates[0]);
+                                                setDateTo(allDates[allDates.length - 1]);
+                                            }
+                                        }
                                     }}
                                 >
                                     <option value="Todos">Todos</option>
@@ -1144,6 +1156,13 @@
                                                         border: '1px solid #AEAEB8',
                                                         borderRadius: '8px'
                                                     }}
+                                                />
+                                                <ReferenceLine
+                                                    y={35}
+                                                    stroke="#EF4444"
+                                                    strokeWidth={2}
+                                                    strokeDasharray="8 4"
+                                                    label={{ value: 'Meta 35', position: 'right', fill: '#EF4444', fontWeight: 600, fontSize: 12 }}
                                                 />
                                                 <Line
                                                     type="monotone"

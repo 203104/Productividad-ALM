@@ -623,14 +623,13 @@
         const RankingTable = ({ dailyData, weeklyData }) => {
             const [searchTerm, setSearchTerm] = useState('');
             const [currentPage, setCurrentPage] = useState(1);
-            const [rankingPeriod, setRankingPeriod] = useState('Semanal');
             const [selectedMes, setSelectedMes] = useState('Todos');
             const [selectedSemana, setSelectedSemana] = useState('Todos');
             const [selectedDia, setSelectedDia] = useState('Todos');
             const itemsPerPage = 10;
 
-            const isDaily = rankingPeriod === 'Diario';
-            const rawData = isDaily ? dailyData : weeklyData;
+            const isDaily = true;
+            const rawData = dailyData;
 
             const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
             const mesToNumMap = {'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12};
@@ -747,10 +746,6 @@
                 <div className="table-section">
                     <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
-                        <select value={rankingPeriod} onChange={(e) => { setRankingPeriod(e.target.value); setSelectedMes('Todos'); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={{ ...selectStyle, fontWeight: 700 }}>
-                            <option value="Semanal">Semanal</option>
-                            <option value="Diario">Diario</option>
-                        </select>
                         <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
                             <option value="Todos">Todos los meses</option>
                             {monthOptions.map(([key, label]) => (

@@ -625,6 +625,7 @@
             const [currentPage, setCurrentPage] = useState(1);
             const [selectedMes, setSelectedMes] = useState('Todos');
             const [selectedSemana, setSelectedSemana] = useState('Todos');
+            const [selectedDia, setSelectedDia] = useState('Todos');
             const itemsPerPage = 10;
 
             const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -667,7 +668,30 @@
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily, selectedMes]);
 
-            // Filter rawData by selected month AND week
+            // Build day options (filtered by selected month and week, only for isDaily)
+            const dayOptions = useMemo(() => {
+                if (!isDaily) return [];
+                const opts = new Map();
+                rawData.forEach(item => {
+                    const m = getItemMeta(item);
+                    if (selectedMes !== 'Todos') {
+                        const mesKey = m.anio + '-' + String(m.mes).padStart(2, '0');
+                        if (mesKey !== selectedMes) return;
+                    }
+                    if (selectedSemana !== 'Todos') {
+                        const wKey = m.anio + '-S' + String(m.semana).padStart(2, '0');
+                        if (wKey !== selectedSemana) return;
+                    }
+                    if (item.dia) {
+                        const d = new Date(item.dia + 'T12:00:00');
+                        const label = d.toLocaleDateString('es-CL', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        opts.set(item.dia, label);
+                    }
+                });
+                return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+            }, [rawData, isDaily, selectedMes, selectedSemana]);
+
+            // Filter rawData by selected month AND week AND day
             const periodFilteredData = useMemo(() => {
                 return rawData.filter(item => {
                     const m = getItemMeta(item);
@@ -679,9 +703,12 @@
                         const wKey = m.anio + '-S' + String(m.semana).padStart(2, '0');
                         if (wKey !== selectedSemana) return false;
                     }
+                    if (isDaily && selectedDia !== 'Todos') {
+                        if (item.dia !== selectedDia) return false;
+                    }
                     return true;
                 });
-            }, [rawData, selectedMes, selectedSemana, isDaily]);
+            }, [rawData, selectedMes, selectedSemana, selectedDia, isDaily]);
 
             // Group by operator
             const rankingData = useMemo(() => {
@@ -723,18 +750,26 @@
                 <div className="table-section">
                     <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
-                        <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setCurrentPage(1); }} style={selectStyle}>
+                        <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
                             <option value="Todos">Todos los meses</option>
                             {monthOptions.map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
                             ))}
                         </select>
-                        <select value={selectedSemana} onChange={(e) => { setSelectedSemana(e.target.value); setCurrentPage(1); }} style={selectStyle}>
+                        <select value={selectedSemana} onChange={(e) => { setSelectedSemana(e.target.value); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
                             <option value="Todos">Todas las semanas</option>
                             {weekOptions.map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
                             ))}
                         </select>
+                        {isDaily && (
+                            <select value={selectedDia} onChange={(e) => { setSelectedDia(e.target.value); setCurrentPage(1); }} style={selectStyle}>
+                                <option value="Todos">Todos los días</option>
+                                {dayOptions.map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                ))}
+                            </select>
+                        )}
                         <div className="table-search">
                             <input
                                 type="text"

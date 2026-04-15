@@ -620,18 +620,21 @@
         );
 
         // Ranking Table Component with own period filter
-        const RankingTable = ({ rawData, isDaily, periodView }) => {
+        const RankingTable = ({ dailyData, weeklyData }) => {
             const [searchTerm, setSearchTerm] = useState('');
             const [currentPage, setCurrentPage] = useState(1);
+            const [rankingPeriod, setRankingPeriod] = useState('Semanal');
             const [selectedMes, setSelectedMes] = useState('Todos');
             const [selectedSemana, setSelectedSemana] = useState('Todos');
             const [selectedDia, setSelectedDia] = useState('Todos');
             const itemsPerPage = 10;
 
+            const isDaily = rankingPeriod === 'Diario';
+            const rawData = isDaily ? dailyData : weeklyData;
+
             const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
             const mesToNumMap = {'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12};
 
-            // Helper: get mes/semana/anio from item
             const getItemMeta = (item) => {
                 if (isDaily) {
                     return { mes: item.mes || (new Date(item.dia + 'T12:00:00').getMonth() + 1), semana: item.semana || 0, anio: item.anio || new Date(item.dia + 'T12:00:00').getFullYear() };
@@ -641,7 +644,6 @@
                 }
             };
 
-            // Build month options
             const monthOptions = useMemo(() => {
                 const opts = new Map();
                 rawData.forEach(item => {
@@ -652,12 +654,10 @@
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily]);
 
-            // Build week options (filtered by selected month)
             const weekOptions = useMemo(() => {
                 const opts = new Map();
                 rawData.forEach(item => {
                     const m = getItemMeta(item);
-                    // Si hay mes seleccionado, solo mostrar semanas de ese mes
                     if (selectedMes !== 'Todos') {
                         const mesKey = m.anio + '-' + String(m.mes).padStart(2, '0');
                         if (mesKey !== selectedMes) return;
@@ -668,7 +668,6 @@
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily, selectedMes]);
 
-            // Build day options (filtered by selected month and week, only for isDaily)
             const dayOptions = useMemo(() => {
                 if (!isDaily) return [];
                 const opts = new Map();
@@ -691,7 +690,6 @@
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily, selectedMes, selectedSemana]);
 
-            // Filter rawData by selected month AND week AND day
             const periodFilteredData = useMemo(() => {
                 return rawData.filter(item => {
                     const m = getItemMeta(item);
@@ -710,7 +708,6 @@
                 });
             }, [rawData, selectedMes, selectedSemana, selectedDia, isDaily]);
 
-            // Group by operator
             const rankingData = useMemo(() => {
                 const prodField = isDaily ? 'productividad_hora' : 'productividad';
                 const grouped = {};
@@ -750,6 +747,10 @@
                 <div className="table-section">
                     <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
+                        <select value={rankingPeriod} onChange={(e) => { setRankingPeriod(e.target.value); setSelectedMes('Todos'); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={{ ...selectStyle, fontWeight: 700 }}>
+                            <option value="Semanal">Semanal</option>
+                            <option value="Diario">Diario</option>
+                        </select>
                         <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
                             <option value="Todos">Todos los meses</option>
                             {monthOptions.map(([key, label]) => (
@@ -1391,11 +1392,10 @@
                         )}
 
                         {/* Ranking Table */}
-                        {filteredData.length > 0 && (
+                        {(filteredData.length > 0 || dailyData.length > 0 || weeklyData.length > 0) && (
                             <RankingTable
-                                rawData={filteredData}
-                                isDaily={isDaily}
-                                periodView={periodView}
+                                dailyData={dailyData}
+                                weeklyData={weeklyData}
                             />
                         )}
 

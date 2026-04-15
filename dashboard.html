@@ -26,6 +26,9 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- SheetJS para descarga Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -774,6 +777,66 @@
                                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
+                        <button
+                            onClick={async () => {
+                                try {
+                                    let query = supabase.from('3-productividad_final').select('*');
+                                    if (selectedDia !== 'Todos') {
+                                        query = query.eq('dia', selectedDia);
+                                    } else if (selectedSemana !== 'Todos') {
+                                        const parts = selectedSemana.split('-S');
+                                        query = query.eq('anio', parseInt(parts[0])).eq('semana', parseInt(parts[1]));
+                                    } else if (selectedMes !== 'Todos') {
+                                        const parts = selectedMes.split('-');
+                                        query = query.eq('anio', parseInt(parts[0])).eq('mes', parseInt(parts[1]));
+                                    }
+                                    query = query.order('dia', { ascending: true }).order('usuario', { ascending: true });
+                                    const { data, error } = await query;
+                                    if (error) throw error;
+                                    if (!data || data.length === 0) { alert('No hay datos para descargar'); return; }
+                                    const rows = data.map(r => ({
+                                        'Dia': r.dia,
+                                        'Usuario': r.usuario,
+                                        'Nombre': r.nombre,
+                                        'Cargo': r.cargo,
+                                        'Mov LPN Cajas': r.mov_cajas,
+                                        'Mov LPN Destino': r.mov_destino,
+                                        'OUT Minutas': r.pallets_despacho,
+                                        'IN Minutas': r.pallets_recepcion,
+                                        'Total Movimientos': r.total_movimientos,
+                                        'Horas Efectivas': parseFloat(r.horas_efectivas),
+                                        'Productividad/Hora': parseFloat(r.productividad_hora),
+                                        'Factor Ajustado': parseFloat(r.factor_ajustado)
+                                    }));
+                                    const ws = XLSX.utils.json_to_sheet(rows);
+                                    ws['!cols'] = [
+                                        {wch:12},{wch:14},{wch:38},{wch:32},
+                                        {wch:16},{wch:16},{wch:14},{wch:14},
+                                        {wch:18},{wch:16},{wch:18},{wch:16}
+                                    ];
+                                    const wb = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(wb, ws, 'Detalle');
+                                    const periodo = selectedDia !== 'Todos' ? selectedDia : selectedSemana !== 'Todos' ? selectedSemana : selectedMes !== 'Todos' ? selectedMes : 'completo';
+                                    XLSX.writeFile(wb, 'detalle_productividad_' + periodo + '.xlsx');
+                                } catch (err) {
+                                    console.error(err);
+                                    alert('Error al descargar: ' + err.message);
+                                }
+                            }}
+                            style={{
+                                padding: '0.4rem 1rem',
+                                borderRadius: '8px',
+                                border: '1px solid #10B981',
+                                backgroundColor: '#10B981',
+                                color: '#fff',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Descargar Excel
+                        </button>
                     </div>
 
                     {searchFiltered.length === 0 ? (

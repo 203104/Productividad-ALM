@@ -54,16 +54,9 @@ La minuta operacional es manual, por lo que los nombres pueden variar. La tabla 
 - `fn_3_guardar_productividad(fecha_desde, fecha_hasta)` - Materializa la vista de productividad en la tabla snapshot
 - `fn_guardar_detalle_diario(fecha_desde, fecha_hasta)` - Pobla/actualiza la tabla de detalle diario por operario
 
-## Dashboard - Tabla de Flujo Diario
+## Dashboard - Flujo Diario en Gráfico
 
-Debajo del grafico de "Tendencia de Productividad General" aparece una tabla compacta con el flujo real de pallets por dia segun el rango de fechas seleccionado en los filtros. Los datos se consultan directamente desde `1-minuta_operacional` y muestran:
-
-| Columna | Descripcion |
-|---------|-------------|
-| **Dia** | Fecha formateada (ej: mie. 16/04/2026) |
-| **IN (líneas)** | Cantidad de filas con flujo IN en la minuta |
-| **OUT (líneas)** | Cantidad de filas con flujo OUT en la minuta |
-| **Total** | Suma IN + OUT |
+En vista Diaria, el grafico de "Tendencia de Productividad General" muestra sobre cada punto la cantidad total de lineas de minuta (IN + OUT) del dia, consultadas desde `1-minuta_operacional`. Esto permite correlacionar productividad con volumen de flujo en cada jornada.
 
 ---
 Desarrollado para Trailer Logistics | 2026

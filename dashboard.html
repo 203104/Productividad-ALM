@@ -354,19 +354,19 @@
         }
 
         .ranking-table th {
-            padding: 1rem;
+            padding: 0.45rem 0.75rem;
             text-align: left;
             font-weight: 600;
             color: #5E6373;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .ranking-table td {
-            padding: 1rem;
+            padding: 0.4rem 0.75rem;
             border-bottom: 1px solid #F2F2F5;
-            font-size: 0.95rem;
+            font-size: 0.82rem;
             color: #192853;
         }
 
@@ -383,21 +383,22 @@
             font-weight: 700;
             color: #0E245E;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem;
+            font-size: 0.82rem;
         }
 
         .operator-name {
             font-weight: 600;
             color: #192853;
+            font-size: 0.82rem;
         }
 
         .cargo-badge {
             display: inline-block;
             background-color: #0E245E;
             color: #FFFEFF;
-            padding: 0.25rem 0.75rem;
+            padding: 0.15rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             font-weight: 500;
         }
 
@@ -625,11 +626,9 @@
         // Ranking Table Component with own period filter
         const RankingTable = ({ dailyData, weeklyData }) => {
             const [searchTerm, setSearchTerm] = useState('');
-            const [currentPage, setCurrentPage] = useState(1);
             const [selectedMes, setSelectedMes] = useState('Todos');
             const [selectedSemana, setSelectedSemana] = useState('Todos');
             const [selectedDia, setSelectedDia] = useState('Todos');
-            const itemsPerPage = 10;
 
             const isDaily = true;
             const rawData = dailyData;
@@ -737,32 +736,26 @@
                 return rankingData.filter(item => item.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
             }, [rankingData, searchTerm]);
 
-            const totalPages = Math.ceil(searchFiltered.length / itemsPerPage);
-            const paginatedData = useMemo(() => {
-                const start = (currentPage - 1) * itemsPerPage;
-                return searchFiltered.slice(start, start + itemsPerPage);
-            }, [searchFiltered, currentPage, itemsPerPage]);
-
             const selectStyle = { padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #AEAEB8', fontSize: '0.85rem', backgroundColor: '#fff', color: '#192853', fontWeight: 500 };
 
             return (
                 <div className="table-section">
                     <div className="table-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         <h2 style={{ marginBottom: 0 }}>Ranking de Operarios</h2>
-                        <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
+                        <select value={selectedMes} onChange={(e) => { setSelectedMes(e.target.value); setSelectedSemana('Todos'); setSelectedDia('Todos'); }} style={selectStyle}>
                             <option value="Todos">Todos los meses</option>
                             {monthOptions.map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
                             ))}
                         </select>
-                        <select value={selectedSemana} onChange={(e) => { setSelectedSemana(e.target.value); setSelectedDia('Todos'); setCurrentPage(1); }} style={selectStyle}>
+                        <select value={selectedSemana} onChange={(e) => { setSelectedSemana(e.target.value); setSelectedDia('Todos'); }} style={selectStyle}>
                             <option value="Todos">Todas las semanas</option>
                             {weekOptions.map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
                             ))}
                         </select>
                         {isDaily && (
-                            <select value={selectedDia} onChange={(e) => { setSelectedDia(e.target.value); setCurrentPage(1); }} style={selectStyle}>
+                            <select value={selectedDia} onChange={(e) => { setSelectedDia(e.target.value); }} style={selectStyle}>
                                 <option value="Todos">Todos los días</option>
                                 {dayOptions.map(([key, label]) => (
                                     <option key={key} value={key}>{label}</option>
@@ -774,7 +767,7 @@
                                 type="text"
                                 placeholder="Buscar por nombre..."
                                 value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                onChange={(e) => { setSearchTerm(e.target.value); }}
                             />
                         </div>
                         <button
@@ -857,9 +850,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {paginatedData.map((item, idx) => (
+                                    {searchFiltered.map((item, idx) => (
                                         <tr key={item.nombre}>
-                                            <td><span className="rank-number">{(currentPage - 1) * itemsPerPage + idx + 1}</span></td>
+                                            <td><span className="rank-number">{idx + 1}</span></td>
                                             <td><span className="operator-name">{item.nombre}</span></td>
                                             <td><span className="cargo-badge">{item.cargo}</span></td>
                                             <td><span className="mono-value">{formatChileanNumber(item.productividad_promedio)}</span></td>
@@ -868,16 +861,6 @@
                                     ))}
                                 </tbody>
                             </table>
-
-                            {totalPages > 1 && (
-                                <div className="pagination">
-                                    <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>← Anterior</button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                        <button key={page} onClick={() => setCurrentPage(page)} className={page === currentPage ? 'active' : ''}>{page}</button>
-                                    ))}
-                                    <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>Siguiente →</button>
-                                </div>
-                            )}
                         </>
                     )}
                 </div>

@@ -629,6 +629,7 @@
             const [selectedMes, setSelectedMes] = useState('Todos');
             const [selectedSemana, setSelectedSemana] = useState('Todos');
             const [selectedDia, setSelectedDia] = useState('Todos');
+            const [selectedCargoRanking, setSelectedCargoRanking] = useState('Todos');
 
             const isDaily = true;
             const rawData = dailyData;
@@ -691,6 +692,12 @@
                 return Array.from(opts.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }, [rawData, isDaily, selectedMes, selectedSemana]);
 
+            const cargoOptions = useMemo(() => {
+                const cargos = new Set();
+                rawData.forEach(item => { if (item.cargo) cargos.add(item.cargo); });
+                return Array.from(cargos).sort();
+            }, [rawData]);
+
             const periodFilteredData = useMemo(() => {
                 return rawData.filter(item => {
                     const m = getItemMeta(item);
@@ -705,9 +712,10 @@
                     if (isDaily && selectedDia !== 'Todos') {
                         if (item.dia !== selectedDia) return false;
                     }
+                    if (selectedCargoRanking !== 'Todos' && item.cargo !== selectedCargoRanking) return false;
                     return true;
                 });
-            }, [rawData, selectedMes, selectedSemana, selectedDia, isDaily]);
+            }, [rawData, selectedMes, selectedSemana, selectedDia, selectedCargoRanking, isDaily]);
 
             const rankingData = useMemo(() => {
                 const prodField = isDaily ? 'productividad_hora' : 'productividad';
@@ -762,6 +770,10 @@
                                 ))}
                             </select>
                         )}
+                        <select value={selectedCargoRanking} onChange={(e) => setSelectedCargoRanking(e.target.value)} style={selectStyle}>
+                            <option value="Todos">Todos los cargos</option>
+                            {cargoOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
                         <div className="table-search">
                             <input
                                 type="text"

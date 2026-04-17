@@ -1012,7 +1012,7 @@
                             .order('fecha', { ascending: true })
                             .limit(10000);
                         if (dateFrom) query = query.gte('fecha', dateFrom);
-                        if (dateTo) query = query.lte('fecha', dateTo);
+                        if (dateTo) query = query.lte('fecha', dateTo + 'T23:59:59');
                         const { data, error } = await query;
                         if (error) throw error;
                         setFlujoData(data || []);
@@ -1029,7 +1029,7 @@
             const flujoByDate = useMemo(() => {
                 const map = {};
                 flujoData.forEach(row => {
-                    const fecha = row.fecha;
+                    const fecha = (row.fecha || '').split('T')[0];
                     if (!fecha) return;
                     if (!map[fecha]) map[fecha] = 0;
                     map[fecha] += 1;

@@ -1034,7 +1034,7 @@
                 fetchFlujo();
             }, [dateFrom, dateTo]);
 
-            // Map fecha → total lines (IN + OUT) from minuta
+            // Map fecha → total lines from minuta
             const flujoByDate = useMemo(() => {
                 const map = {};
                 flujoData.forEach(row => {
@@ -1045,6 +1045,30 @@
                 });
                 return map;
             }, [flujoData]);
+
+            // Aggregate flujo by ISO week and by month (avg daily lines)
+            const flujoAggregated = useMemo(() => {
+                const byWeek = {};
+                const byMonth = {};
+                Object.entries(flujoByDate).forEach(([fecha, count]) => {
+                    const monthKey = fecha.substring(0, 7);
+                    if (!byMonth[monthKey]) byMonth[monthKey] = { total: 0, days: 0 };
+                    byMonth[monthKey].total += count;
+                    byMonth[monthKey].days += 1;
+
+                    const d = new Date(fecha + 'T12:00:00');
+                    const dow = d.getDay() || 7;
+                    const thu = new Date(d);
+                    thu.setDate(d.getDate() + 4 - dow);
+                    const yearStart = new Date(thu.getFullYear(), 0, 1);
+                    const weekNum = Math.ceil((((thu - yearStart) / 86400000) + 1) / 7);
+                    const weekKey = thu.getFullYear() + '-S' + String(weekNum).padStart(2, '0');
+                    if (!byWeek[weekKey]) byWeek[weekKey] = { total: 0, days: 0 };
+                    byWeek[weekKey].total += count;
+                    byWeek[weekKey].days += 1;
+                });
+                return { byWeek, byMonth };
+            }, [flujoByDate]);
 
             // Determine active data source based on period view
             const isDaily = periodView === 'Diario';
@@ -1113,7 +1137,8 @@
                         const d = new Date(item.dia + 'T12:00:00');
                         label = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
                     } else if (periodView === 'Mensual') {
-                        const mesNum = mesToNum[item.mes] || 0;
+                        const mesNum = typeof item.mes === 'number' ? item.mes : (mesToNum[item.mes] || 0);
+                        if (!mesNum) return;
                         key = item.anio + '-' + String(mesNum).padStart(2, '0');
                         label = meses[mesNum] + ' ' + item.anio;
                     } else {
@@ -1127,12 +1152,24 @@
 
                 return Object.values(grouped)
                     .sort((a, b) => a.key.localeCompare(b.key))
-                    .map(item => ({
-                        fecha: item.label,
-                        'Pallets/Hora': parseFloat((item.productividad / item.count).toFixed(2)),
-                        flujo: isDaily ? (flujoByDate[item.key] || null) : null
-                    }));
-            }, [filteredData, periodView, isDaily, flujoByDate]);
+                    .map(item => {
+                        let flujo = null;
+                        if (isDaily) {
+                            flujo = flujoByDate[item.key] || null;
+                        } else if (periodView === 'Mensual') {
+                            const agg = flujoAggregated.byMonth[item.key];
+                            flujo = agg && agg.days > 0 ? Math.round(agg.total / agg.days) : null;
+                        } else {
+                            const agg = flujoAggregated.byWeek[item.key];
+                            flujo = agg && agg.days > 0 ? Math.round(agg.total / agg.days) : null;
+                        }
+                        return {
+                            fecha: item.label,
+                            'Pallets/Hora': parseFloat((item.productividad / item.count).toFixed(2)),
+                            flujo
+                        };
+                    });
+            }, [filteredData, periodView, isDaily, flujoByDate, flujoAggregated]);
 
             // Prepare Chart Data - Tendencia por Cargo (líneas)
             const CARGO_COLORS = ['#0E245E', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
@@ -1149,7 +1186,8 @@
                         const d = new Date(item.dia + 'T12:00:00');
                         label = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
                     } else if (periodView === 'Mensual') {
-                        const mesNum = mesToNum[item.mes] || 0;
+                        const mesNum = typeof item.mes === 'number' ? item.mes : (mesToNum[item.mes] || 0);
+                        if (!mesNum) return;
                         key = item.anio + '-' + String(mesNum).padStart(2, '0');
                         label = meses[mesNum] + ' ' + item.anio;
                     } else {
@@ -1383,7 +1421,7 @@
                                             <Area type="monotone" dataKey="Pallets/Hora" fill="url(#gradGeneral)" stroke="none" />
                                             <Line type="monotone" dataKey="Pallets/Hora" stroke="#0E245E"
                                                 dot={{ fill: '#10B981', r: 4 }} activeDot={{ r: 6 }} strokeWidth={2}>
-                                                {isDaily && <LabelList dataKey="flujo" position="top" style={{ fontSize: '0.68rem', fill: '#5E6373', fontWeight: 600 }} formatter={(v) => v ? v + 'f' : ''} />}
+                                                <LabelList dataKey="flujo" position="top" style={{ fontSize: '0.68rem', fill: '#5E6373', fontWeight: 600 }} formatter={(v) => v ? v + 'f' : ''} />
                                             </Line>
                                         </ComposedChart>
                                     </ResponsiveContainer>

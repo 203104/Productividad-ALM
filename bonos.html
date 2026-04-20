@@ -173,6 +173,30 @@
         <button class="btn-export" id="btnExportar" disabled>Exportar Excel</button>
     </div>
 
+    <!-- Configuracion del pozo (pallets facturados → valor x tramo → pozo total) -->
+    <div class="admin-config" style="border-left: 4px solid var(--navy);">
+        <div class="filter-group">
+            <label for="palletsFacturados">Pallets facturados del mes</label>
+            <input type="number" id="palletsFacturados" min="0" step="1" value="0" />
+            <span style="font-size:10px;color:var(--slate);margin-top:4px">
+                ≤15.000 → $75 · 15.001-25.000 → $85 · 25.001-30.000 → $115 · >30.000 → $125
+            </span>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--navy); padding:12px 16px;">
+            <div class="kpi-label">Valor del pallet</div>
+            <div class="kpi-value" id="kpiValorPallet" style="font-size:20px">$0</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px" id="kpiTramo">-</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--navy); padding:12px 16px;">
+            <div class="kpi-label">Pozo total del bono</div>
+            <div class="kpi-value" id="kpiPozoTotal" style="font-size:20px">$0</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px">Pallets × valor</div>
+        </div>
+        <div style="font-size:11px;color:var(--slate);align-self:center;max-width:220px;line-height:1.4">
+            Este pozo se dividirá luego entre operarios y administrativos (config pendiente).
+        </div>
+    </div>
+
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-label">Operarios con movimientos</div>
@@ -495,10 +519,71 @@ function poblarSelectores() {
 }
 
 // ========================================================
-// SECCION ADMINISTRATIVOS
+// CONFIGURACION DEL POZO (pallets facturados → valor pallet → pozo total)
 // ========================================================
 
 const ADMIN_HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
+
+// Tramos de valor por pallet
+function valorPorTramo(pallets) {
+    if (pallets <= 15000)  return { valor:  75, label: 'Tramo 1 (≤15.000)' };
+    if (pallets <= 25000)  return { valor:  85, label: 'Tramo 2 (15.001-25.000)' };
+    if (pallets <= 30000)  return { valor: 115, label: 'Tramo 3 (25.001-30.000)' };
+    return                        { valor: 125, label: 'Tramo 4 (>30.000)' };
+}
+
+let saveTimer = null;
+
+async function fetchBonoConfig(anio, mes) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-bono_config_mensual?anio=eq.${anio}&mes=eq.${mes}&limit=1`, { headers: ADMIN_HEADERS });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return rows[0] || null;
+}
+
+async function upsertBonoConfig(anio, mes, pallets, valor, pozo) {
+    const body = { anio, mes, pallets_facturados: pallets, valor_pallet: valor, pozo_total: pozo, updated_at: new Date().toISOString() };
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-bono_config_mensual?on_conflict=anio,mes`, {
+        method: 'POST',
+        headers: { ...ADMIN_HEADERS, Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('Error guardando config: HTTP ' + r.status);
+    return (await r.json())[0];
+}
+
+function renderPozoConfig() {
+    const pallets = Math.max(0, parseInt($('palletsFacturados').value, 10) || 0);
+    const { valor, label } = valorPorTramo(pallets);
+    const pozo = pallets * valor;
+    $('kpiValorPallet').textContent = fmtMoney(valor);
+    $('kpiTramo').textContent = label;
+    $('kpiPozoTotal').textContent = fmtMoney(pozo);
+    return { pallets, valor, pozo };
+}
+
+async function loadBonoConfig() {
+    const anio = parseInt($('anioBono').value, 10);
+    const mes = parseInt($('mesBono').value, 10);
+    const cfg = await fetchBonoConfig(anio, mes);
+    $('palletsFacturados').value = cfg?.pallets_facturados ?? 0;
+    renderPozoConfig();
+}
+
+function onPalletsChange() {
+    const { pallets, valor, pozo } = renderPozoConfig();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+        const anio = parseInt($('anioBono').value, 10);
+        const mes = parseInt($('mesBono').value, 10);
+        try { await upsertBonoConfig(anio, mes, pallets, valor, pozo); }
+        catch (e) { console.error(e); }
+    }, 500);
+}
+
+// ========================================================
+// SECCION ADMINISTRATIVOS
+// ========================================================
 let admins = []; // catalogo base
 let bonoMensualMap = new Map(); // admin_id → registro mensual actual
 
@@ -741,10 +826,11 @@ function exportarAdmin() {
 (function init() {
     poblarSelectores();
     actualizarPeriodo();
-    $('mesBono').addEventListener('change', () => { actualizarPeriodo(); loadAdminsSection(); });
-    $('anioBono').addEventListener('change', () => { actualizarPeriodo(); loadAdminsSection(); });
+    $('mesBono').addEventListener('change', () => { actualizarPeriodo(); loadBonoConfig(); loadAdminsSection(); });
+    $('anioBono').addEventListener('change', () => { actualizarPeriodo(); loadBonoConfig(); loadAdminsSection(); });
     $('btnConsultar').addEventListener('click', consultar);
     $('btnExportar').addEventListener('click', exportar);
+    $('palletsFacturados').addEventListener('input', onPalletsChange);
 
     // Admin
     $('btnAddAdmin').addEventListener('click', openAdminModal);
@@ -756,6 +842,7 @@ function exportarAdmin() {
     $('adminModal').addEventListener('click', (e) => { if (e.target.id === 'adminModal') closeAdminModal(); });
 
     ping();
+    loadBonoConfig();
     loadAdminsSection();
 })();
 </script>

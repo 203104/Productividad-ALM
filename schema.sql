@@ -400,6 +400,33 @@ CREATE POLICY admin_bono_all_update ON "3-administrativos_bono_mensual" FOR UPDA
 CREATE POLICY admin_bono_all_delete ON "3-administrativos_bono_mensual" FOR DELETE TO public USING (true);
 
 
+-- 6c. CONFIG DEL POZO POR MES DE BONO
+-- ============================================================
+-- Pallets facturados + valor x pallet segun tramo = pozo total del mes.
+-- Tramos aplicados en el cliente (bonos.html):
+--   <=15.000  -> $75
+--   15.001-25.000 -> $85
+--   25.001-30.000 -> $115
+--   >30.000   -> $125
+CREATE TABLE IF NOT EXISTS "3-bono_config_mensual" (
+    id                  SERIAL PRIMARY KEY,
+    anio                INTEGER NOT NULL,
+    mes                 INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),
+    pallets_facturados  INTEGER DEFAULT 0,
+    valor_pallet        NUMERIC(6,0) DEFAULT 0,   -- snapshot al editar
+    pozo_total          NUMERIC(12,0) DEFAULT 0,  -- snapshot al editar
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (anio, mes)
+);
+
+ALTER TABLE "3-bono_config_mensual" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY bcm_all_select ON "3-bono_config_mensual" FOR SELECT TO public USING (true);
+CREATE POLICY bcm_all_insert ON "3-bono_config_mensual" FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY bcm_all_update ON "3-bono_config_mensual" FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY bcm_all_delete ON "3-bono_config_mensual" FOR DELETE TO public USING (true);
+
+
 -- 7. FUNCION: DETECTAR OPERARIOS NUEVOS (PENDIENTES)
 -- ============================================================
 -- Busca usuarios WMS presentes en historial_cajas/destino que NO esten

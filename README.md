@@ -23,6 +23,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 - `3-operarios` - Maestro de operarios con usuario WMS, cargo, factor ajustado, y **estado** (`pendiente`/`activo`/`inactivo`). Solo los `activo` participan en reportes.
 - `3-administrativos` - Catalogo de personas que NO pinchan pallets pero reciben bono (supervisores, encargados, aseo, ejecutivos de cuenta, etc.). CRUD manual desde `bonos.html`.
 - `3-administrativos_bono_mensual` - Evaluacion por mes de bono para cada administrativo: `cumplimiento` (0-1), `descuento`, `le_corresponde` (flag regalo), snapshot del pozo y regalo aplicados. Una fila por `(admin, anio, mes)`.
+- `3-bono_config_mensual` - Config del pozo por mes: `pallets_facturados` (entrada manual al inicio del bono) + `valor_pallet` (calculado por tramo) + `pozo_total`. Tramos: ≤15.000→$75, 15.001-25.000→$85, 25.001-30.000→$115, >30.000→$125.
 - `3-operarios_alias` - Mapeo de nombres manuales de minuta a usuario WMS (ej: GVALENZUELA -> GUVALENZUE)
 - `3-historial_cajas` - Movimientos LPN de cajas desde WMS (solo registra al recepcionista)
 - `3-historial_destino` - Movimientos LPN destino desde WMS (solo registra al gruero)
@@ -48,6 +49,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 | `operarios.html` | `3-operarios` | CRUD completo |
 | `bonos.html` | `3-productividad_final` | SELECT + agregacion por usuario en periodo de bono (16 del mes X al 15 del mes X+1) |
 | `bonos.html` | `3-administrativos` + `3-administrativos_bono_mensual` | CRUD de administrativos + upsert de evaluacion mensual (cumplimiento, descuento, regalo) |
+| `bonos.html` | `3-bono_config_mensual` | Upsert de pallets facturados por mes; tramos de valor por pallet calculados en el cliente |
 
 ### Vista principal: `3-v_productividad_diaria`
 

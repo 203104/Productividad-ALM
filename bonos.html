@@ -32,15 +32,17 @@
         .page-title { font-size: 28px; font-weight: 700; color: #000; margin-bottom: 4px; }
         .page-subtitle { color: var(--slate); font-size: 14px; margin-bottom: 24px; }
 
-        .filters-bar { background: var(--white); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 16px; align-items: end; }
+        .filters-bar { background: var(--white); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr auto auto auto; gap: 16px; align-items: end; }
         @media (max-width: 700px) { .filters-bar { grid-template-columns: 1fr; } }
         .filter-group { display: flex; flex-direction: column; gap: 6px; }
         .filter-group label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); font-weight: 600; }
-        .filter-group input {
+        .filter-group select, .filter-group input {
             padding: 10px 12px; border: 1px solid var(--silver); border-radius: 8px;
             font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000; background: var(--white);
         }
-        .filter-group input:focus { outline: none; border-color: var(--navy); }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--navy); }
+        .periodo-box { background: rgba(25,40,83,0.05); border: 1px solid rgba(25,40,83,0.15); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--navy); display: flex; align-items: center; min-height: 42px; }
+        .periodo-box strong { font-family: 'JetBrains Mono', monospace; margin-left: 6px; }
         .btn-apply {
             background: var(--navy); color: white; border: none; padding: 10px 24px; border-radius: 8px;
             font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
@@ -108,17 +110,18 @@
 
 <div class="main">
     <h1 class="page-title">Bonos ALM</h1>
-    <p class="page-subtitle">Movimientos totales por operario en el rango de fechas seleccionado.</p>
+    <p class="page-subtitle">Movimientos totales por operario para el bono del mes seleccionado (periodo 16 al 15).</p>
 
     <div class="filters-bar">
         <div class="filter-group">
-            <label for="fechaDesde">Desde</label>
-            <input type="date" id="fechaDesde">
+            <label for="mesBono">Mes del bono</label>
+            <select id="mesBono"></select>
         </div>
         <div class="filter-group">
-            <label for="fechaHasta">Hasta</label>
-            <input type="date" id="fechaHasta">
+            <label for="anioBono">Año</label>
+            <select id="anioBono"></select>
         </div>
+        <div class="periodo-box">Periodo:<strong id="periodoTxt">-</strong></div>
         <button class="btn-apply" id="btnConsultar">Consultar</button>
         <button class="btn-export" id="btnExportar" disabled>Exportar Excel</button>
     </div>
@@ -167,13 +170,32 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const $ = (id) => document.getElementById(id);
 
-// Default range: dia 1 del mes actual hasta hoy (hora Chile)
-function defaultRange() {
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Bono del mes X (anio-mes) cubre del 16 de X al 15 de X+1
+function periodoBono(anio, mes) {
+    const desde = new Date(anio, mes - 1, 16);
+    const hasta = new Date(anio, mes, 15);
+    const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return { desde: fmt(desde), hasta: fmt(hasta) };
+}
+
+// Bono "actual": si hoy (hora Chile) <= dia 15, el bono en curso es el del mes anterior;
+// si hoy > 15, el bono en curso es el del mes actual.
+function bonoActual() {
     const nowCL = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santiago' }));
-    const yyyy = nowCL.getFullYear();
-    const mm = String(nowCL.getMonth() + 1).padStart(2, '0');
-    const dd = String(nowCL.getDate()).padStart(2, '0');
-    return { desde: `${yyyy}-${mm}-01`, hasta: `${yyyy}-${mm}-${dd}` };
+    let anio = nowCL.getFullYear();
+    let mes = nowCL.getMonth() + 1;
+    if (nowCL.getDate() <= 15) {
+        mes -= 1;
+        if (mes === 0) { mes = 12; anio -= 1; }
+    }
+    return { anio, mes };
+}
+
+function fmtFechaLarga(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${d} ${MESES[m-1].toLowerCase()} ${y}`;
 }
 
 function fmt(n) {
@@ -267,17 +289,26 @@ function render({ list, total, dias }) {
 
 let lastResult = null;
 
-async function consultar() {
-    const desde = $('fechaDesde').value;
-    const hasta = $('fechaHasta').value;
-    if (!desde || !hasta) { alert('Selecciona un rango de fechas.'); return; }
-    if (desde > hasta) { alert('La fecha desde no puede ser mayor que la fecha hasta.'); return; }
+function periodoActual() {
+    const anio = parseInt($('anioBono').value, 10);
+    const mes = parseInt($('mesBono').value, 10);
+    return periodoBono(anio, mes);
+}
 
+function actualizarPeriodo() {
+    const { desde, hasta } = periodoActual();
+    $('periodoTxt').textContent = `${fmtFechaLarga(desde)} - ${fmtFechaLarga(hasta)}`;
+}
+
+async function consultar() {
+    const { desde, hasta } = periodoActual();
     $('btnConsultar').disabled = true;
     $('tbody').innerHTML = '<tr><td colspan="6" class="loading">Cargando...</td></tr>';
     try {
         const rows = await fetchAll(desde, hasta);
         lastResult = aggregate(rows);
+        lastResult.desde = desde;
+        lastResult.hasta = hasta;
         render(lastResult);
     } catch (e) {
         $('tbody').innerHTML = `<tr><td colspan="6" class="empty-state" style="color:var(--error)">Error: ${e.message}</td></tr>`;
@@ -288,8 +319,9 @@ async function consultar() {
 
 function exportar() {
     if (!lastResult || !lastResult.list.length) return;
-    const desde = $('fechaDesde').value;
-    const hasta = $('fechaHasta').value;
+    const mesIdx = parseInt($('mesBono').value, 10) - 1;
+    const anio = $('anioBono').value;
+    const nombreMes = MESES[mesIdx];
     const data = lastResult.list.map((r, i) => ({
         '#': i + 1,
         'Nombre': r.nombre,
@@ -300,15 +332,29 @@ function exportar() {
     }));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Bonos ALM');
-    XLSX.writeFile(wb, `Bonos_ALM_${desde}_${hasta}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, `Bono ${nombreMes} ${anio}`);
+    XLSX.writeFile(wb, `Bonos_ALM_${nombreMes}_${anio}.xlsx`);
+}
+
+function poblarSelectores() {
+    const { anio: anioActual, mes: mesActual } = bonoActual();
+    const selMes = $('mesBono');
+    selMes.innerHTML = MESES.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
+    selMes.value = mesActual;
+
+    const selAnio = $('anioBono');
+    const yrs = [];
+    for (let y = anioActual + 1; y >= anioActual - 3; y--) yrs.push(y);
+    selAnio.innerHTML = yrs.map(y => `<option value="${y}">${y}</option>`).join('');
+    selAnio.value = anioActual;
 }
 
 // Init
 (function init() {
-    const { desde, hasta } = defaultRange();
-    $('fechaDesde').value = desde;
-    $('fechaHasta').value = hasta;
+    poblarSelectores();
+    actualizarPeriodo();
+    $('mesBono').addEventListener('change', actualizarPeriodo);
+    $('anioBono').addEventListener('change', actualizarPeriodo);
     $('btnConsultar').addEventListener('click', consultar);
     $('btnExportar').addEventListener('click', exportar);
     ping();

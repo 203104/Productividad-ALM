@@ -344,9 +344,9 @@
             <label>Centro de costo</label>
             <input type="text" id="admCentro" value="SERVICIOS DE ALMACENAJE">
         </div>
-        <div class="form-row">
-            <label>% Participación (ej: 9.09)</label>
-            <input type="number" id="admPorcentaje" step="0.0001" min="0" max="100" placeholder="9.09">
+        <input type="hidden" id="admPorcentaje" value="0" />
+        <div style="font-size:11px;color:var(--slate);margin:6px 0 12px;padding:8px 12px;background:var(--ice-grey);border-radius:6px">
+            El % de participación se redistribuye automáticamente en partes iguales entre todos los administrativos.
         </div>
         <div class="modal-actions">
             <button class="btn-cancel" id="btnCancelAdmin">Cancelar</button>
@@ -876,6 +876,14 @@ async function loadAdminsSection() {
     }
 }
 
+async function rebalanceAdmins() {
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_3_rebalance_administrativos`, {
+            method: 'POST', headers: ADMIN_HEADERS, body: '{}'
+        });
+    } catch (e) { console.error('Rebalance fallo:', e); }
+}
+
 async function deleteAdmin(id) {
     const admin = admins.find(a => a.id === id);
     if (!admin) return;
@@ -884,6 +892,7 @@ async function deleteAdmin(id) {
         method: 'DELETE', headers: ADMIN_HEADERS
     });
     if (!r.ok) { alert('Error al eliminar'); return; }
+    await rebalanceAdmins();
     await loadAdminsSection();
 }
 
@@ -904,15 +913,13 @@ function closeAdminModal() {
 async function saveNewAdmin() {
     const nombre = $('admNombre').value.trim().toUpperCase();
     if (!nombre) { alert('El nombre es obligatorio'); return; }
-    const pctInput = parseFloat($('admPorcentaje').value);
-    const pct = isNaN(pctInput) ? 0 : pctInput / 100;
     const body = {
         nombre,
         rut: $('admRut').value.trim() || null,
         cargo: $('admCargo').value.trim().toUpperCase() || null,
         unidad_negocio: $('admUnidad').value.trim() || null,
         centro_costo: $('admCentro').value.trim() || null,
-        porcentaje: pct,
+        porcentaje: 0, // se redistribuye con rebalanceAdmins() post-insert
         activo: true
     };
     const r = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos`, {
@@ -922,6 +929,7 @@ async function saveNewAdmin() {
     });
     if (!r.ok) { alert('Error al guardar: ' + await r.text()); return; }
     closeAdminModal();
+    await rebalanceAdmins();
     await loadAdminsSection();
 }
 

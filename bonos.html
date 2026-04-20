@@ -87,6 +87,53 @@
         .loading { padding: 40px; text-align: center; color: var(--slate); font-size: 13px; }
         .loading::before { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid var(--ice-grey); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Sección admin */
+        .section-divider { margin: 40px 0 20px; display: flex; align-items: center; gap: 12px; }
+        .section-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+        .section-hint { font-size: 12px; color: var(--slate); }
+
+        .admin-config { background: var(--white); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: end; }
+        .admin-config .filter-group { }
+        .admin-config button { align-self: end; }
+
+        table input.inline-edit {
+            width: 90px; padding: 6px 8px; border: 1px solid var(--ice-grey); border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; background: var(--ice-grey);
+        }
+        table input.inline-edit:focus { outline: none; border-color: var(--navy); background: var(--white); }
+        table input.inline-edit.saving { border-color: var(--warning); }
+        table input.inline-edit.saved { border-color: var(--success); }
+        table input.inline-edit[type="checkbox"] { width: 16px; height: 16px; }
+
+        .btn-delete-row {
+            background: none; border: none; color: var(--error); cursor: pointer; padding: 4px 8px; border-radius: 4px;
+            font-size: 16px; opacity: 0.6; transition: opacity 0.2s;
+        }
+        .btn-delete-row:hover { opacity: 1; background: rgba(201,53,53,0.1); }
+
+        .btn-add-admin {
+            background: var(--success); color: white; border: none; padding: 10px 18px; border-radius: 8px;
+            font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .btn-add-admin:hover { background: #0F6E3A; }
+
+        /* Modal */
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-backdrop.visible { display: flex; }
+        .modal-card { background: var(--white); border-radius: 12px; padding: 24px; width: 90%; max-width: 520px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+        .modal-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--navy); }
+        .modal-card .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+        .modal-card label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate); font-weight: 600; }
+        .modal-card input, .modal-card select {
+            padding: 10px 12px; border: 1px solid var(--silver); border-radius: 8px;
+            font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000; background: var(--white);
+        }
+        .modal-card input:focus, .modal-card select:focus { outline: none; border-color: var(--navy); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+        .btn-cancel { background: var(--ice-grey); color: var(--slate); border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-save { background: var(--navy); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-save:hover { background: var(--royal); }
     </style>
 </head>
 <body>
@@ -161,6 +208,103 @@
                 <tr><td colspan="6" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- ========= SECCION ADMINISTRATIVOS ========= -->
+    <div class="section-divider">
+        <div>
+            <div class="section-title">Administrativos</div>
+            <div class="section-hint">Personas que no pinchan pallets. Se agregan/editan manualmente. Evaluación por mes de bono.</div>
+        </div>
+    </div>
+
+    <div class="admin-config">
+        <div class="filter-group">
+            <label for="pozoAdmin">Pozo administrativos ($)</label>
+            <input type="number" id="pozoAdmin" min="0" step="1000" value="518987" />
+        </div>
+        <div class="filter-group">
+            <label for="regaloAdmin">Monto regalo por cumplimiento ($)</label>
+            <input type="number" id="regaloAdmin" min="0" step="1000" value="20000" />
+        </div>
+        <button class="btn-add-admin" id="btnAddAdmin">+ Agregar administrativo</button>
+        <button class="btn-export" id="btnExportarAdmin" disabled>Exportar Excel</button>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card" style="border-left-color:var(--success)">
+            <div class="kpi-label">Administrativos activos</div>
+            <div class="kpi-value" id="kpiAdminCount">-</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--success)">
+            <div class="kpi-label">Suma % participación</div>
+            <div class="kpi-value" id="kpiAdminPct">-</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--success)">
+            <div class="kpi-label">Bono total (con regalos)</div>
+            <div class="kpi-value" id="kpiAdminBono">-</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <div class="table-header">
+            <span class="table-title">Bonos administrativos - mes seleccionado</span>
+            <span class="table-count" id="adminCount"></span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Cargo</th>
+                    <th class="num">% Part.</th>
+                    <th class="num">% Cumpl.</th>
+                    <th class="num">Dinero x persona</th>
+                    <th class="num">Descuento</th>
+                    <th class="num">Bono real</th>
+                    <th style="text-align:center">Regalo</th>
+                    <th class="num">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tbodyAdmin">
+                <tr><td colspan="10" class="empty-state">Cargando administrativos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal agregar administrativo -->
+<div class="modal-backdrop" id="adminModal">
+    <div class="modal-card">
+        <h3>Agregar administrativo</h3>
+        <div class="form-row">
+            <label>Nombre completo *</label>
+            <input type="text" id="admNombre" placeholder="APELLIDO PATERNO APELLIDO MATERNO, NOMBRES">
+        </div>
+        <div class="form-row">
+            <label>RUT</label>
+            <input type="text" id="admRut" placeholder="XX.XXX.XXX-X">
+        </div>
+        <div class="form-row">
+            <label>Cargo</label>
+            <input type="text" id="admCargo" placeholder="Ej: ENCARGADO DE INVENTARIO">
+        </div>
+        <div class="form-row">
+            <label>Unidad de negocio</label>
+            <input type="text" id="admUnidad" value="SERVICIOS DE ALMACENAJE (PALLET)">
+        </div>
+        <div class="form-row">
+            <label>Centro de costo</label>
+            <input type="text" id="admCentro" value="SERVICIOS DE ALMACENAJE">
+        </div>
+        <div class="form-row">
+            <label>% Participación (ej: 9.09)</label>
+            <input type="number" id="admPorcentaje" step="0.0001" min="0" max="100" placeholder="9.09">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelAdmin">Cancelar</button>
+            <button class="btn-save" id="btnSaveAdmin">Guardar</button>
+        </div>
     </div>
 </div>
 
@@ -349,15 +493,260 @@ function poblarSelectores() {
     selAnio.value = anioActual;
 }
 
+// ========================================================
+// SECCION ADMINISTRATIVOS
+// ========================================================
+
+const ADMIN_HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' };
+let admins = []; // catalogo base
+let bonoMensualMap = new Map(); // admin_id → registro mensual actual
+
+async function fetchAdmins() {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos?activo=eq.true&order=nombre.asc`, { headers: ADMIN_HEADERS });
+    if (!r.ok) throw new Error('Error al cargar administrativos');
+    return await r.json();
+}
+
+async function fetchBonoMensual(anio, mes) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos_bono_mensual?anio=eq.${anio}&mes=eq.${mes}`, { headers: ADMIN_HEADERS });
+    if (!r.ok) throw new Error('Error al cargar bono mensual admin');
+    const rows = await r.json();
+    const map = new Map();
+    rows.forEach(r => map.set(r.admin_id, r));
+    return map;
+}
+
+async function upsertBonoMensual(admin_id, anio, mes, patch) {
+    const existing = bonoMensualMap.get(admin_id);
+    const body = { admin_id, anio, mes, ...existing, ...patch, updated_at: new Date().toISOString() };
+    delete body.id; delete body.created_at;
+    // Upsert via on-conflict
+    const url = `${SUPABASE_URL}/rest/v1/3-administrativos_bono_mensual?on_conflict=admin_id,anio,mes`;
+    const r = await fetch(url, {
+        method: 'POST',
+        headers: { ...ADMIN_HEADERS, Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('Error guardando bono admin: HTTP ' + r.status);
+    const saved = (await r.json())[0];
+    bonoMensualMap.set(admin_id, saved);
+    return saved;
+}
+
+function calcularAdmin(admin, bonoRow, pozo, regalo) {
+    const cumpl = bonoRow ? parseFloat(bonoRow.cumplimiento) : 1.0;
+    const desc = bonoRow ? parseFloat(bonoRow.descuento) : 0;
+    const leCorr = bonoRow ? bonoRow.le_corresponde : false;
+    const pct = parseFloat(admin.porcentaje) || 0;
+    const dineroPersona = pozo * pct;
+    const bonoReal = dineroPersona * cumpl - desc;
+    const total = bonoReal + (leCorr ? regalo : 0);
+    return { pct, cumpl, desc, leCorr, dineroPersona, bonoReal, total };
+}
+
+function fmtMoney(n) {
+    return '$' + new Intl.NumberFormat('es-CL').format(Math.round(n || 0));
+}
+
+function renderAdmins() {
+    const tbody = $('tbodyAdmin');
+    if (!admins.length) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Sin administrativos. Agregá el primero arriba.</td></tr>';
+        $('kpiAdminCount').textContent = '0';
+        $('kpiAdminPct').textContent = '0%';
+        $('kpiAdminBono').textContent = '$0';
+        $('btnExportarAdmin').disabled = true;
+        return;
+    }
+    const pozo = parseFloat($('pozoAdmin').value) || 0;
+    const regalo = parseFloat($('regaloAdmin').value) || 0;
+    let sumaPct = 0, sumaTotal = 0;
+
+    tbody.innerHTML = admins.map(admin => {
+        const bonoRow = bonoMensualMap.get(admin.id);
+        const c = calcularAdmin(admin, bonoRow, pozo, regalo);
+        sumaPct += c.pct;
+        sumaTotal += c.total;
+        const cumplPct = Math.round(c.cumpl * 100);
+        return `<tr data-admin-id="${admin.id}">
+            <td>${admin.nombre || '-'}</td>
+            <td><span class="cargo-tag">${admin.cargo || '-'}</span></td>
+            <td class="num">${(c.pct * 100).toFixed(2)}%</td>
+            <td class="num">
+                <input type="number" class="inline-edit" data-field="cumplimiento" min="0" max="100" step="1" value="${cumplPct}" />
+            </td>
+            <td class="num">${fmtMoney(c.dineroPersona)}</td>
+            <td class="num">
+                <input type="number" class="inline-edit" data-field="descuento" min="0" step="1000" value="${Math.round(c.desc)}" />
+            </td>
+            <td class="num">${fmtMoney(c.bonoReal)}</td>
+            <td style="text-align:center">
+                <input type="checkbox" class="inline-edit" data-field="le_corresponde" ${c.leCorr ? 'checked' : ''} />
+            </td>
+            <td class="num"><strong>${fmtMoney(c.total)}</strong></td>
+            <td><button class="btn-delete-row" data-admin-id="${admin.id}" title="Eliminar">🗑</button></td>
+        </tr>`;
+    }).join('');
+
+    $('kpiAdminCount').textContent = admins.length;
+    $('kpiAdminPct').textContent = (sumaPct * 100).toFixed(2) + '%';
+    $('kpiAdminBono').textContent = fmtMoney(sumaTotal);
+    $('adminCount').textContent = `${admins.length} administrativos`;
+    $('btnExportarAdmin').disabled = false;
+
+    // Bind inline edits
+    tbody.querySelectorAll('input.inline-edit').forEach(inp => {
+        inp.addEventListener('change', handleAdminEdit);
+    });
+    tbody.querySelectorAll('.btn-delete-row').forEach(btn => {
+        btn.addEventListener('click', () => deleteAdmin(parseInt(btn.dataset.adminId, 10)));
+    });
+}
+
+async function handleAdminEdit(e) {
+    const tr = e.target.closest('tr');
+    const admin_id = parseInt(tr.dataset.adminId, 10);
+    const field = e.target.dataset.field;
+    const anio = parseInt($('anioBono').value, 10);
+    const mes = parseInt($('mesBono').value, 10);
+    let value;
+    if (field === 'cumplimiento') {
+        value = parseFloat(e.target.value) / 100;
+        if (isNaN(value) || value < 0) value = 0;
+        if (value > 1) value = 1;
+    } else if (field === 'descuento') {
+        value = parseFloat(e.target.value) || 0;
+    } else if (field === 'le_corresponde') {
+        value = e.target.checked;
+    }
+    e.target.classList.add('saving'); e.target.classList.remove('saved');
+    try {
+        const pozo = parseFloat($('pozoAdmin').value) || 0;
+        const regalo = parseFloat($('regaloAdmin').value) || 0;
+        await upsertBonoMensual(admin_id, anio, mes, {
+            [field]: value,
+            pozo_aplicado: pozo,
+            regalo_aplicado: regalo
+        });
+        e.target.classList.remove('saving'); e.target.classList.add('saved');
+        setTimeout(() => e.target.classList.remove('saved'), 1000);
+        renderAdmins(); // recalcular totales
+    } catch (err) {
+        e.target.classList.remove('saving');
+        alert('Error: ' + err.message);
+    }
+}
+
+async function loadAdminsSection() {
+    try {
+        const anio = parseInt($('anioBono').value, 10);
+        const mes = parseInt($('mesBono').value, 10);
+        [admins, bonoMensualMap] = await Promise.all([fetchAdmins(), fetchBonoMensual(anio, mes)]);
+        renderAdmins();
+    } catch (err) {
+        $('tbodyAdmin').innerHTML = `<tr><td colspan="10" class="empty-state" style="color:var(--error)">Error: ${err.message}</td></tr>`;
+    }
+}
+
+async function deleteAdmin(id) {
+    const admin = admins.find(a => a.id === id);
+    if (!admin) return;
+    if (!confirm(`¿Eliminar a ${admin.nombre}? Se borrarán también sus evaluaciones mensuales.`)) return;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos?id=eq.${id}`, {
+        method: 'DELETE', headers: ADMIN_HEADERS
+    });
+    if (!r.ok) { alert('Error al eliminar'); return; }
+    await loadAdminsSection();
+}
+
+function openAdminModal() {
+    $('admNombre').value = '';
+    $('admRut').value = '';
+    $('admCargo').value = '';
+    $('admPorcentaje').value = '';
+    $('admUnidad').value = 'SERVICIOS DE ALMACENAJE (PALLET)';
+    $('admCentro').value = 'SERVICIOS DE ALMACENAJE';
+    $('adminModal').classList.add('visible');
+}
+
+function closeAdminModal() {
+    $('adminModal').classList.remove('visible');
+}
+
+async function saveNewAdmin() {
+    const nombre = $('admNombre').value.trim().toUpperCase();
+    if (!nombre) { alert('El nombre es obligatorio'); return; }
+    const pctInput = parseFloat($('admPorcentaje').value);
+    const pct = isNaN(pctInput) ? 0 : pctInput / 100;
+    const body = {
+        nombre,
+        rut: $('admRut').value.trim() || null,
+        cargo: $('admCargo').value.trim().toUpperCase() || null,
+        unidad_negocio: $('admUnidad').value.trim() || null,
+        centro_costo: $('admCentro').value.trim() || null,
+        porcentaje: pct,
+        activo: true
+    };
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos`, {
+        method: 'POST',
+        headers: { ...ADMIN_HEADERS, Prefer: 'return=representation' },
+        body: JSON.stringify(body)
+    });
+    if (!r.ok) { alert('Error al guardar: ' + await r.text()); return; }
+    closeAdminModal();
+    await loadAdminsSection();
+}
+
+function exportarAdmin() {
+    if (!admins.length) return;
+    const anio = $('anioBono').value;
+    const mesNombre = MESES[parseInt($('mesBono').value, 10) - 1];
+    const pozo = parseFloat($('pozoAdmin').value) || 0;
+    const regalo = parseFloat($('regaloAdmin').value) || 0;
+    const rows = admins.map(admin => {
+        const bonoRow = bonoMensualMap.get(admin.id);
+        const c = calcularAdmin(admin, bonoRow, pozo, regalo);
+        return {
+            'RUT': admin.rut || '',
+            'Nombre': admin.nombre,
+            'Unidad Negocio': admin.unidad_negocio || '',
+            'Centro de Costo': admin.centro_costo || '',
+            'Cargo': admin.cargo || '',
+            '% Participacion': c.pct,
+            '% Cumplimiento': c.cumpl,
+            'Dinero x persona': Math.round(c.dineroPersona),
+            'Descuento': Math.round(c.desc),
+            'Bono real': Math.round(c.bonoReal),
+            'Le corresponde regalo': c.leCorr ? 1 : 0,
+            'Bono + Regalo': Math.round(c.total)
+        };
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, `ADM ${mesNombre} ${anio}`);
+    XLSX.writeFile(wb, `Bonos_ADM_${mesNombre}_${anio}.xlsx`);
+}
+
 // Init
 (function init() {
     poblarSelectores();
     actualizarPeriodo();
-    $('mesBono').addEventListener('change', actualizarPeriodo);
-    $('anioBono').addEventListener('change', actualizarPeriodo);
+    $('mesBono').addEventListener('change', () => { actualizarPeriodo(); loadAdminsSection(); });
+    $('anioBono').addEventListener('change', () => { actualizarPeriodo(); loadAdminsSection(); });
     $('btnConsultar').addEventListener('click', consultar);
     $('btnExportar').addEventListener('click', exportar);
+
+    // Admin
+    $('btnAddAdmin').addEventListener('click', openAdminModal);
+    $('btnCancelAdmin').addEventListener('click', closeAdminModal);
+    $('btnSaveAdmin').addEventListener('click', saveNewAdmin);
+    $('btnExportarAdmin').addEventListener('click', exportarAdmin);
+    $('pozoAdmin').addEventListener('input', renderAdmins);
+    $('regaloAdmin').addEventListener('input', renderAdmins);
+    $('adminModal').addEventListener('click', (e) => { if (e.target.id === 'adminModal') closeAdminModal(); });
+
     ping();
+    loadAdminsSection();
 })();
 </script>
 </body>

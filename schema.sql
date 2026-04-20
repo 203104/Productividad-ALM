@@ -350,6 +350,56 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- 6b. TABLAS DE ADMINISTRATIVOS (no pinchan pallets, reciben bono)
+-- ============================================================
+-- Catalogo base (datos estables)
+CREATE TABLE IF NOT EXISTS "3-administrativos" (
+    id              SERIAL PRIMARY KEY,
+    rut             TEXT UNIQUE,
+    nombre          TEXT NOT NULL,
+    unidad_negocio  TEXT,
+    centro_costo    TEXT,
+    cargo           TEXT,
+    porcentaje      NUMERIC(7,6) DEFAULT 0,   -- 0 a 1 (ej: 0.090909 = 9.09%)
+    activo          BOOLEAN DEFAULT TRUE,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_activo ON "3-administrativos" (activo);
+
+-- Evaluacion por mes de bono (cumplimiento, descuento, regalo)
+CREATE TABLE IF NOT EXISTS "3-administrativos_bono_mensual" (
+    id              SERIAL PRIMARY KEY,
+    admin_id        INTEGER NOT NULL REFERENCES "3-administrativos"(id) ON DELETE CASCADE,
+    anio            INTEGER NOT NULL,
+    mes             INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),
+    cumplimiento    NUMERIC(3,2) DEFAULT 1.00,  -- 0.00 a 1.00
+    descuento       NUMERIC(12,2) DEFAULT 0,
+    le_corresponde  BOOLEAN DEFAULT FALSE,       -- si cobra el regalo
+    pozo_aplicado   NUMERIC(12,2) DEFAULT 0,     -- snapshot del pozo al editar
+    regalo_aplicado NUMERIC(12,2) DEFAULT 0,     -- snapshot del regalo al editar
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (admin_id, anio, mes)
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_bono_periodo ON "3-administrativos_bono_mensual" (anio, mes);
+
+-- RLS abierto (consistente con resto del proyecto)
+ALTER TABLE "3-administrativos" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "3-administrativos_bono_mensual" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_all_select ON "3-administrativos" FOR SELECT TO public USING (true);
+CREATE POLICY admin_all_insert ON "3-administrativos" FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY admin_all_update ON "3-administrativos" FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY admin_all_delete ON "3-administrativos" FOR DELETE TO public USING (true);
+
+CREATE POLICY admin_bono_all_select ON "3-administrativos_bono_mensual" FOR SELECT TO public USING (true);
+CREATE POLICY admin_bono_all_insert ON "3-administrativos_bono_mensual" FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY admin_bono_all_update ON "3-administrativos_bono_mensual" FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY admin_bono_all_delete ON "3-administrativos_bono_mensual" FOR DELETE TO public USING (true);
+
+
 -- 7. FUNCION: DETECTAR OPERARIOS NUEVOS (PENDIENTES)
 -- ============================================================
 -- Busca usuarios WMS presentes en historial_cajas/destino que NO esten

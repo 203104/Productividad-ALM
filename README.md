@@ -11,7 +11,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 - index.html - Pagina de carga de datos
 - dashboard.html - Dashboard de productividad
 - operarios.html - Gestion de operarios
-- bonos.html - Ranking de movimientos totales por operario para el bono del mes (periodo fijo 16 al 15)
+- bonos.html - Dos secciones por mes de bono: Operarios (ranking por movimientos) + Administrativos (evaluacion editable por persona)
 - schema.sql - Esquema de base de datos (tablas, vistas, funciones)
 - detalle_diario_operario.sql - Tabla y funcion de detalle diario por operario
 
@@ -21,6 +21,8 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 
 ### Tablas principales
 - `3-operarios` - Maestro de operarios con usuario WMS, cargo, factor ajustado, y **estado** (`pendiente`/`activo`/`inactivo`). Solo los `activo` participan en reportes.
+- `3-administrativos` - Catalogo de personas que NO pinchan pallets pero reciben bono (supervisores, encargados, aseo, ejecutivos de cuenta, etc.). CRUD manual desde `bonos.html`.
+- `3-administrativos_bono_mensual` - Evaluacion por mes de bono para cada administrativo: `cumplimiento` (0-1), `descuento`, `le_corresponde` (flag regalo), snapshot del pozo y regalo aplicados. Una fila por `(admin, anio, mes)`.
 - `3-operarios_alias` - Mapeo de nombres manuales de minuta a usuario WMS (ej: GVALENZUELA -> GUVALENZUE)
 - `3-historial_cajas` - Movimientos LPN de cajas desde WMS (solo registra al recepcionista)
 - `3-historial_destino` - Movimientos LPN destino desde WMS (solo registra al gruero)
@@ -45,6 +47,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 | `dashboard.html` | `1-minuta_operacional` | SELECT lineas IN+OUT por dia |
 | `operarios.html` | `3-operarios` | CRUD completo |
 | `bonos.html` | `3-productividad_final` | SELECT + agregacion por usuario en periodo de bono (16 del mes X al 15 del mes X+1) |
+| `bonos.html` | `3-administrativos` + `3-administrativos_bono_mensual` | CRUD de administrativos + upsert de evaluacion mensual (cumplimiento, descuento, regalo) |
 
 ### Vista principal: `3-v_productividad_diaria`
 

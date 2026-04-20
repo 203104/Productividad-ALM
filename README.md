@@ -11,6 +11,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 - index.html - Pagina de carga de datos
 - dashboard.html - Dashboard de productividad
 - operarios.html - Gestion de operarios
+- bonos.html - Ranking de movimientos totales por operario en rango de fechas (insumo para bonos)
 - schema.sql - Esquema de base de datos (tablas, vistas, funciones)
 - detalle_diario_operario.sql - Tabla y funcion de detalle diario por operario
 
@@ -43,6 +44,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 | `dashboard.html` | `3-productividad_final`, `3-productividad_semanal` | SELECT principal del dashboard |
 | `dashboard.html` | `1-minuta_operacional` | SELECT lineas IN+OUT por dia |
 | `operarios.html` | `3-operarios` | CRUD completo |
+| `bonos.html` | `3-productividad_final` | SELECT + agregacion por usuario en rango de fechas |
 
 ### Vista principal: `3-v_productividad_diaria`
 

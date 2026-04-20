@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonos ALM - Movimientos por Operario | Trailer Logistics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --navy: #192853; --royal: #0E245E; --midnight: #010B24;
+            --white: #FFFEFF; --ice-grey: #F2F2F5; --silver: #AEAEB8;
+            --slate: #5E6373; --charcoal: #212621;
+            --success: #1B8A4A; --error: #C93535; --warning: #D4860B;
+        }
+        body { font-family: 'Montserrat', Arial, sans-serif; background: var(--ice-grey); color: #000; min-height: 100vh; }
+
+        .header { background: var(--midnight); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-logo { width: 40px; height: 40px; background: var(--navy); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; }
+        .header h1 { color: var(--white); font-size: 16px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .header-status { display: flex; align-items: center; gap: 8px; color: var(--silver); font-size: 12px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+        .status-dot.disconnected { background: var(--error); }
+        .nav-links { display: flex; gap: 12px; }
+        .nav-links a { color: var(--white); font-size: 12px; text-decoration: none; padding: 6px 14px; border-radius: 6px; background: rgba(255,255,255,0.1); transition: background 0.2s; }
+        .nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .nav-links a.active { background: rgba(255,255,255,0.25); font-weight: 600; }
+
+        .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+        .page-title { font-size: 28px; font-weight: 700; color: #000; margin-bottom: 4px; }
+        .page-subtitle { color: var(--slate); font-size: 14px; margin-bottom: 24px; }
+
+        .filters-bar { background: var(--white); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 16px; align-items: end; }
+        @media (max-width: 700px) { .filters-bar { grid-template-columns: 1fr; } }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); font-weight: 600; }
+        .filter-group input {
+            padding: 10px 12px; border: 1px solid var(--silver); border-radius: 8px;
+            font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000; background: var(--white);
+        }
+        .filter-group input:focus { outline: none; border-color: var(--navy); }
+        .btn-apply {
+            background: var(--navy); color: white; border: none; padding: 10px 24px; border-radius: 8px;
+            font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-apply:hover { background: var(--royal); }
+        .btn-apply:disabled { background: var(--silver); cursor: wait; }
+        .btn-export {
+            background: var(--white); color: var(--navy); border: 1px solid var(--navy); padding: 10px 20px; border-radius: 8px;
+            font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-export:hover { background: var(--navy); color: var(--white); }
+        .btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .kpi-card { background: var(--white); border-radius: 12px; padding: 16px 20px; border-left: 4px solid var(--navy); }
+        .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-bottom: 6px; }
+        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--navy); }
+
+        .table-wrap { background: var(--white); border-radius: 12px; overflow: hidden; }
+        .table-header { padding: 16px 24px; border-bottom: 1px solid var(--ice-grey); display: flex; align-items: center; justify-content: space-between; }
+        .table-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+        .table-count { font-size: 12px; color: var(--slate); font-family: 'JetBrains Mono', monospace; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            text-align: left; padding: 12px 24px; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--slate); font-weight: 600; background: var(--ice-grey);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        thead th.num { text-align: right; }
+        tbody td { padding: 12px 24px; font-size: 13px; border-bottom: 1px solid var(--ice-grey); }
+        tbody td.num { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        tbody tr:hover { background: rgba(25,40,83,0.03); }
+        .pos { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; background: var(--ice-grey); color: var(--slate); font-size: 11px; font-weight: 700; }
+        .pos.top { background: var(--navy); color: var(--white); }
+        .cargo-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: rgba(25,40,83,0.08); color: var(--navy); }
+        .bar-wrap { display: inline-block; width: 100px; height: 6px; background: var(--ice-grey); border-radius: 3px; overflow: hidden; vertical-align: middle; margin-left: 8px; }
+        .bar-fill { height: 100%; background: var(--navy); border-radius: 3px; }
+
+        .empty-state { padding: 60px 24px; text-align: center; color: var(--silver); font-size: 13px; }
+        .loading { padding: 40px; text-align: center; color: var(--slate); font-size: 13px; }
+        .loading::before { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid var(--ice-grey); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="header-logo">TL</div>
+        <h1>Trailer Logistics</h1>
+    </div>
+    <div class="nav-links">
+        <a href="index.html">Carga</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="operarios.html">Operarios</a>
+        <a href="bonos.html" class="active">Bonos ALM</a>
+    </div>
+    <div class="header-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Conectando...</span>
+    </div>
+</div>
+
+<div class="main">
+    <h1 class="page-title">Bonos ALM</h1>
+    <p class="page-subtitle">Movimientos totales por operario en el rango de fechas seleccionado.</p>
+
+    <div class="filters-bar">
+        <div class="filter-group">
+            <label for="fechaDesde">Desde</label>
+            <input type="date" id="fechaDesde">
+        </div>
+        <div class="filter-group">
+            <label for="fechaHasta">Hasta</label>
+            <input type="date" id="fechaHasta">
+        </div>
+        <button class="btn-apply" id="btnConsultar">Consultar</button>
+        <button class="btn-export" id="btnExportar" disabled>Exportar Excel</button>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Operarios con movimientos</div>
+            <div class="kpi-value" id="kpiOperarios">-</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Movimientos totales</div>
+            <div class="kpi-value" id="kpiMovs">-</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Dias en rango</div>
+            <div class="kpi-value" id="kpiDias">-</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <div class="table-header">
+            <span class="table-title">Ranking de operarios</span>
+            <span class="table-count" id="tableCount"></span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Operario</th>
+                    <th>Usuario WMS</th>
+                    <th>Cargo</th>
+                    <th class="num">Movimientos</th>
+                    <th class="num">% del total</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="6" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xcmpuyjoidexrgpnotkj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbXB1eWpvaWRleHJncG5vdGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjYxOTQsImV4cCI6MjA4ODc0MjE5NH0.F8QeJldEz8QLBkbtCZ6a78zK27iSDnpgNqtnJLDuWN4';
+
+const $ = (id) => document.getElementById(id);
+
+// Default range: dia 1 del mes actual hasta hoy (hora Chile)
+function defaultRange() {
+    const nowCL = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santiago' }));
+    const yyyy = nowCL.getFullYear();
+    const mm = String(nowCL.getMonth() + 1).padStart(2, '0');
+    const dd = String(nowCL.getDate()).padStart(2, '0');
+    return { desde: `${yyyy}-${mm}-01`, hasta: `${yyyy}-${mm}-${dd}` };
+}
+
+function fmt(n) {
+    return new Intl.NumberFormat('es-CL').format(Math.round(n || 0));
+}
+
+function pct(n) {
+    return (n * 100).toFixed(1) + '%';
+}
+
+async function ping() {
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/3-operarios?select=id&limit=1`, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        $('statusDot').classList.toggle('disconnected', !r.ok);
+        $('statusText').textContent = r.ok ? 'Conectado' : 'Sin conexion';
+    } catch {
+        $('statusDot').classList.add('disconnected');
+        $('statusText').textContent = 'Sin conexion';
+    }
+}
+
+async function fetchAll(desde, hasta) {
+    const pageSize = 1000;
+    let offset = 0;
+    const all = [];
+    while (true) {
+        const url = `${SUPABASE_URL}/rest/v1/3-productividad_final`
+            + `?select=usuario,nombre,cargo,total_movimientos,dia`
+            + `&dia=gte.${desde}&dia=lte.${hasta}`
+            + `&total_movimientos=gt.0`
+            + `&order=dia.asc&limit=${pageSize}&offset=${offset}`;
+        const r = await fetch(url, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+        const rows = await r.json();
+        all.push(...rows);
+        if (rows.length < pageSize) break;
+        offset += pageSize;
+    }
+    return all;
+}
+
+function aggregate(rows) {
+    const map = new Map();
+    const dias = new Set();
+    let total = 0;
+    for (const r of rows) {
+        dias.add(r.dia);
+        total += r.total_movimientos || 0;
+        const key = r.usuario;
+        if (!map.has(key)) {
+            map.set(key, { usuario: r.usuario, nombre: r.nombre, cargo: r.cargo, movimientos: 0 });
+        }
+        map.get(key).movimientos += r.total_movimientos || 0;
+    }
+    const list = [...map.values()].sort((a, b) => b.movimientos - a.movimientos);
+    return { list, total, dias: dias.size };
+}
+
+function render({ list, total, dias }) {
+    $('kpiOperarios').textContent = fmt(list.length);
+    $('kpiMovs').textContent = fmt(total);
+    $('kpiDias').textContent = fmt(dias);
+    $('tableCount').textContent = list.length ? `${list.length} operarios` : '';
+
+    const tbody = $('tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
+        $('btnExportar').disabled = true;
+        return;
+    }
+    const max = list[0].movimientos || 1;
+    tbody.innerHTML = list.map((r, i) => {
+        const posClass = i < 3 ? 'pos top' : 'pos';
+        const barW = Math.round((r.movimientos / max) * 100);
+        const p = total > 0 ? r.movimientos / total : 0;
+        return `<tr>
+            <td><span class="${posClass}">${i + 1}</span></td>
+            <td>${r.nombre || '-'}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate)">${r.usuario || '-'}</td>
+            <td>${r.cargo ? `<span class="cargo-tag">${r.cargo}</span>` : '-'}</td>
+            <td class="num">${fmt(r.movimientos)}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
+            <td class="num">${pct(p)}</td>
+        </tr>`;
+    }).join('');
+    $('btnExportar').disabled = false;
+}
+
+let lastResult = null;
+
+async function consultar() {
+    const desde = $('fechaDesde').value;
+    const hasta = $('fechaHasta').value;
+    if (!desde || !hasta) { alert('Selecciona un rango de fechas.'); return; }
+    if (desde > hasta) { alert('La fecha desde no puede ser mayor que la fecha hasta.'); return; }
+
+    $('btnConsultar').disabled = true;
+    $('tbody').innerHTML = '<tr><td colspan="6" class="loading">Cargando...</td></tr>';
+    try {
+        const rows = await fetchAll(desde, hasta);
+        lastResult = aggregate(rows);
+        render(lastResult);
+    } catch (e) {
+        $('tbody').innerHTML = `<tr><td colspan="6" class="empty-state" style="color:var(--error)">Error: ${e.message}</td></tr>`;
+    } finally {
+        $('btnConsultar').disabled = false;
+    }
+}
+
+function exportar() {
+    if (!lastResult || !lastResult.list.length) return;
+    const desde = $('fechaDesde').value;
+    const hasta = $('fechaHasta').value;
+    const data = lastResult.list.map((r, i) => ({
+        '#': i + 1,
+        'Nombre': r.nombre,
+        'Usuario WMS': r.usuario,
+        'Cargo': r.cargo,
+        'Movimientos': r.movimientos,
+        '% del total': lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Bonos ALM');
+    XLSX.writeFile(wb, `Bonos_ALM_${desde}_${hasta}.xlsx`);
+}
+
+// Init
+(function init() {
+    const { desde, hasta } = defaultRange();
+    $('fechaDesde').value = desde;
+    $('fechaHasta').value = hasta;
+    $('btnConsultar').addEventListener('click', consultar);
+    $('btnExportar').addEventListener('click', exportar);
+    ping();
+})();
+</script>
+</body>
+</html>

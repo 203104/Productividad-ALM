@@ -196,8 +196,29 @@
             <div class="kpi-value" id="kpiPozoTotal" style="font-size:20px">$0</div>
             <div style="font-size:10px;color:var(--slate);margin-top:4px">Pallets × valor</div>
         </div>
-        <div style="font-size:11px;color:var(--slate);align-self:center;max-width:220px;line-height:1.4">
-            Este pozo se dividirá luego entre operarios y administrativos (config pendiente).
+    </div>
+
+    <!-- Division del pozo -->
+    <div class="admin-config" style="border-left: 4px solid var(--success);">
+        <div class="kpi-card" style="border-left-color:var(--success); padding:12px 16px;">
+            <div class="kpi-label">Personas con bono</div>
+            <div class="kpi-value" id="kpiPersonas" style="font-size:20px">-</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px" id="kpiPersonasDet">operarios + admins</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--success); padding:12px 16px;">
+            <div class="kpi-label">Valor base por persona</div>
+            <div class="kpi-value" id="kpiValorBase" style="font-size:20px">$0</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px">Pozo total / personas</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--navy); padding:12px 16px;">
+            <div class="kpi-label">Pozo operarios</div>
+            <div class="kpi-value" id="kpiPozoOper" style="font-size:20px">$0</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px" id="kpiPozoOperDet">-</div>
+        </div>
+        <div class="kpi-card" style="border-left-color:var(--success); padding:12px 16px;">
+            <div class="kpi-label">Pozo administrativos</div>
+            <div class="kpi-value" id="kpiPozoAdmin" style="font-size:20px">$0</div>
+            <div style="font-size:10px;color:var(--slate);margin-top:4px" id="kpiPozoAdminDet">-</div>
         </div>
     </div>
 
@@ -230,10 +251,11 @@
                     <th>Cargo</th>
                     <th class="num">Movimientos</th>
                     <th class="num">% del total</th>
+                    <th class="num">Bono $</th>
                 </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="6" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
+                <tr><td colspan="7" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
             </tbody>
         </table>
     </div>
@@ -248,8 +270,10 @@
 
     <div class="admin-config">
         <div class="filter-group">
-            <label for="pozoAdmin">Pozo administrativos ($)</label>
-            <input type="number" id="pozoAdmin" min="0" step="1000" value="518987" />
+            <label>Pozo administrativos</label>
+            <div class="kpi-value" id="pozoAdminLabel" style="font-size:18px;color:var(--navy)">$0</div>
+            <span style="font-size:10px;color:var(--slate);margin-top:2px">Calculado según cantidad de admins</span>
+            <input type="hidden" id="pozoAdmin" value="0" />
         </div>
         <div class="filter-group">
             <label for="regaloAdmin">Regalo base ($) — se aplica según cumplimiento</label>
@@ -439,15 +463,19 @@ function render({ list, total, dias }) {
 
     const tbody = $('tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
         $('btnExportar').disabled = true;
+        actualizarDivisionPozo();
         return;
     }
+    actualizarDivisionPozo();
+    const pozoOper = currentPozoOperarios;
     const max = list[0].movimientos || 1;
     tbody.innerHTML = list.map((r, i) => {
         const posClass = i < 3 ? 'pos top' : 'pos';
         const barW = Math.round((r.movimientos / max) * 100);
         const p = total > 0 ? r.movimientos / total : 0;
+        const bono = pozoOper * p;
         return `<tr>
             <td><span class="${posClass}">${i + 1}</span></td>
             <td>${r.nombre || '-'}</td>
@@ -455,9 +483,36 @@ function render({ list, total, dias }) {
             <td>${r.cargo ? `<span class="cargo-tag">${r.cargo}</span>` : '-'}</td>
             <td class="num">${fmt(r.movimientos)}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
             <td class="num">${pct(p)}</td>
+            <td class="num"><strong>${fmtMoney(bono)}</strong></td>
         </tr>`;
     }).join('');
     $('btnExportar').disabled = false;
+}
+
+// Estado de la division del pozo
+let currentPozoOperarios = 0;
+let currentPozoAdmin = 0;
+
+function actualizarDivisionPozo() {
+    const pallets = Math.max(0, parseInt($('palletsFacturados').value, 10) || 0);
+    const { valor } = valorPorTramo(pallets);
+    const pozoTotal = pallets * valor;
+    const nOper = lastResult?.list?.length || 0;
+    const nAdmin = admins?.length || 0;
+    const totalPersonas = nOper + nAdmin;
+    const valorBase = totalPersonas > 0 ? pozoTotal / totalPersonas : 0;
+    currentPozoOperarios = nOper * valorBase;
+    currentPozoAdmin = nAdmin * valorBase;
+    $('kpiPersonas').textContent = fmt(totalPersonas);
+    $('kpiPersonasDet').textContent = `${fmt(nOper)} operarios + ${fmt(nAdmin)} admins`;
+    $('kpiValorBase').textContent = fmtMoney(valorBase);
+    $('kpiPozoOper').textContent = fmtMoney(currentPozoOperarios);
+    $('kpiPozoOperDet').textContent = nOper > 0 ? `${fmt(nOper)} × ${fmtMoney(valorBase)}` : 'Sin operarios';
+    $('kpiPozoAdmin').textContent = fmtMoney(currentPozoAdmin);
+    $('kpiPozoAdminDet').textContent = nAdmin > 0 ? `${fmt(nAdmin)} × ${fmtMoney(valorBase)}` : 'Sin admins';
+    // Propagar al input hidden que usa la seccion admin
+    $('pozoAdmin').value = Math.round(currentPozoAdmin);
+    $('pozoAdminLabel').textContent = fmtMoney(currentPozoAdmin);
 }
 
 let lastResult = null;
@@ -495,14 +550,19 @@ function exportar() {
     const mesIdx = parseInt($('mesBono').value, 10) - 1;
     const anio = $('anioBono').value;
     const nombreMes = MESES[mesIdx];
-    const data = lastResult.list.map((r, i) => ({
-        '#': i + 1,
-        'Nombre': r.nombre,
-        'Usuario WMS': r.usuario,
-        'Cargo': r.cargo,
-        'Movimientos': r.movimientos,
-        '% del total': lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0
-    }));
+    const pozoOper = currentPozoOperarios;
+    const data = lastResult.list.map((r, i) => {
+        const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+        return {
+            '#': i + 1,
+            'Nombre': r.nombre,
+            'Usuario WMS': r.usuario,
+            'Cargo': r.cargo,
+            'Movimientos': r.movimientos,
+            '% del total': p,
+            'Bono $': Math.round(pozoOper * p)
+        };
+    });
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
     XLSX.utils.book_append_sheet(wb, ws, `Bono ${nombreMes} ${anio}`);
@@ -574,6 +634,10 @@ function renderPozoConfig() {
     $('kpiValorPallet').textContent = fmtMoney(valor);
     $('kpiTramo').textContent = label;
     $('kpiPozoTotal').textContent = fmtMoney(pozo);
+    // Recalcular division y re-renderizar secciones que dependen
+    actualizarDivisionPozo();
+    if (admins && admins.length) renderAdmins();
+    if (lastResult) render(lastResult);
     return { pallets, valor, pozo };
 }
 
@@ -780,6 +844,7 @@ async function loadAdminsSection() {
         const anio = parseInt($('anioBono').value, 10);
         const mes = parseInt($('mesBono').value, 10);
         [admins, bonoMensualMap] = await Promise.all([fetchAdmins(), fetchBonoMensual(anio, mes)]);
+        actualizarDivisionPozo();
         renderAdmins();
     } catch (err) {
         $('tbodyAdmin').innerHTML = `<tr><td colspan="10" class="empty-state" style="color:var(--error)">Error: ${err.message}</td></tr>`;
@@ -869,8 +934,14 @@ function exportarAdmin() {
 (function init() {
     poblarSelectores();
     actualizarPeriodo();
-    $('mesBono').addEventListener('change', () => { actualizarPeriodo(); loadBonoConfig(); loadAdminsSection(); });
-    $('anioBono').addEventListener('change', () => { actualizarPeriodo(); loadBonoConfig(); loadAdminsSection(); });
+    const onMesChange = async () => {
+        actualizarPeriodo();
+        await loadBonoConfig();
+        await loadAdminsSection();
+        await consultar();
+    };
+    $('mesBono').addEventListener('change', onMesChange);
+    $('anioBono').addEventListener('change', onMesChange);
     $('btnConsultar').addEventListener('click', consultar);
     $('btnExportar').addEventListener('click', exportar);
     $('palletsFacturados').addEventListener('input', () => {
@@ -889,8 +960,11 @@ function exportarAdmin() {
     $('adminModal').addEventListener('click', (e) => { if (e.target.id === 'adminModal') closeAdminModal(); });
 
     ping();
-    loadBonoConfig();
-    loadAdminsSection();
+    (async () => {
+        await loadBonoConfig();
+        await loadAdminsSection();
+        await consultar();
+    })();
 })();
 </script>
 </body>

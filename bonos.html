@@ -170,7 +170,8 @@
         </div>
         <div class="periodo-box">Periodo:<strong id="periodoTxt">-</strong></div>
         <button class="btn-apply" id="btnConsultar">Consultar</button>
-        <button class="btn-export" id="btnExportar" disabled>Exportar Excel</button>
+        <button class="btn-export" id="btnExportar" disabled>Exportar operarios</button>
+        <button class="btn-apply" id="btnConsolidado" style="background:var(--success)">📥 Descargar consolidado</button>
     </div>
 
     <!-- Configuracion del pozo (pallets facturados → valor x tramo → pozo total) -->
@@ -237,6 +238,7 @@
                 <tr>
                     <th style="width: 60px;">#</th>
                     <th>Operario</th>
+                    <th>RUT</th>
                     <th>Usuario WMS</th>
                     <th>Cargo</th>
                     <th class="num">Movimientos</th>
@@ -245,7 +247,7 @@
                 </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="7" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
+                <tr><td colspan="8" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
             </tbody>
         </table>
     </div>
@@ -407,6 +409,19 @@ async function ping() {
     }
 }
 
+async function fetchOperariosMap() {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-operarios?select=usuario,rut,cargo,nombre`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!r.ok) return new Map();
+    const rows = await r.json();
+    const m = new Map();
+    rows.forEach(o => m.set((o.usuario || '').toUpperCase(), { rut: o.rut, cargo: o.cargo, nombre: o.nombre }));
+    return m;
+}
+
+let operariosMap = new Map();
+
 async function fetchAll(desde, hasta) {
     const pageSize = 1000;
     let offset = 0;
@@ -454,7 +469,7 @@ function render({ list, total, dias }) {
 
     const tbody = $('tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
         $('btnExportar').disabled = true;
         actualizarDivisionPozo();
         return;
@@ -467,9 +482,12 @@ function render({ list, total, dias }) {
         const barW = Math.round((r.movimientos / max) * 100);
         const p = total > 0 ? r.movimientos / total : 0;
         const bono = pozoOper * p;
+        const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
+        const rut = op.rut || '-';
         return `<tr>
             <td><span class="${posClass}">${i + 1}</span></td>
             <td>${r.nombre || '-'}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${rut}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate)">${r.usuario || '-'}</td>
             <td>${r.cargo ? `<span class="cargo-tag">${r.cargo}</span>` : '-'}</td>
             <td class="num">${fmt(r.movimientos)}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
@@ -522,9 +540,10 @@ function actualizarPeriodo() {
 async function consultar() {
     const { desde, hasta } = periodoActual();
     $('btnConsultar').disabled = true;
-    $('tbody').innerHTML = '<tr><td colspan="6" class="loading">Cargando...</td></tr>';
+    $('tbody').innerHTML = '<tr><td colspan="8" class="loading">Cargando...</td></tr>';
     try {
-        const rows = await fetchAll(desde, hasta);
+        const [rows, mapa] = await Promise.all([fetchAll(desde, hasta), fetchOperariosMap()]);
+        operariosMap = mapa;
         lastResult = aggregate(rows);
         lastResult.desde = desde;
         lastResult.hasta = hasta;
@@ -544,9 +563,11 @@ function exportar() {
     const pozoOper = currentPozoOperarios;
     const data = lastResult.list.map((r, i) => {
         const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+        const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
         return {
             '#': i + 1,
             'Nombre': r.nombre,
+            'RUT': op.rut || '',
             'Usuario WMS': r.usuario,
             'Cargo': r.cargo,
             'Movimientos': r.movimientos,
@@ -898,6 +919,54 @@ async function saveNewAdmin() {
     await loadAdminsSection();
 }
 
+function exportarConsolidado() {
+    const anio = $('anioBono').value;
+    const mesIdx = parseInt($('mesBono').value, 10) - 1;
+    const mesNombre = MESES[mesIdx];
+    const pozo = parseFloat($('pozoAdmin').value) || 0;
+    const regalo = parseFloat($('regaloAdmin').value) || 0;
+
+    const filas = [];
+
+    // Operarios
+    if (lastResult && lastResult.list && lastResult.list.length) {
+        const pozoOper = currentPozoOperarios;
+        lastResult.list.forEach(r => {
+            const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+            const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
+            filas.push({
+                'Tipo': 'Operario',
+                'Nombre': r.nombre || '',
+                'RUT': op.rut || '',
+                'Cargo': r.cargo || '',
+                'Monto': Math.round(pozoOper * p)
+            });
+        });
+    }
+
+    // Administrativos
+    if (admins && admins.length) {
+        admins.forEach(admin => {
+            const bonoRow = bonoMensualMap.get(admin.id);
+            const c = calcularAdmin(admin, bonoRow, pozo, regalo);
+            filas.push({
+                'Tipo': 'Administrativo',
+                'Nombre': admin.nombre || '',
+                'RUT': admin.rut || '',
+                'Cargo': admin.cargo || '',
+                'Monto': Math.round(c.total)
+            });
+        });
+    }
+
+    if (!filas.length) { alert('No hay datos que exportar.'); return; }
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(filas);
+    XLSX.utils.book_append_sheet(wb, ws, `Bonos ${mesNombre} ${anio}`);
+    XLSX.writeFile(wb, `Bonos_Consolidado_${mesNombre}_${anio}.xlsx`);
+}
+
 function exportarAdmin() {
     if (!admins.length) return;
     const anio = $('anioBono').value;
@@ -942,6 +1011,7 @@ function exportarAdmin() {
     $('anioBono').addEventListener('change', onMesChange);
     $('btnConsultar').addEventListener('click', consultar);
     $('btnExportar').addEventListener('click', exportar);
+    $('btnConsolidado').addEventListener('click', exportarConsolidado);
     $('palletsFacturados').addEventListener('input', () => {
         onPalletsChange();
         $('palletsDesglose').textContent = 'Override manual (no coincide con la minuta)';
@@ -959,6 +1029,7 @@ function exportarAdmin() {
 
     ping();
     (async () => {
+        operariosMap = await fetchOperariosMap();
         await loadBonoConfig();
         await loadAdminsSection();
         await consultar();

@@ -1380,25 +1380,7 @@
                                 <label>Vista por Periodo</label>
                                 <select
                                     value={periodView}
-                                    onChange={(e) => {
-                                        const newView = e.target.value;
-                                        setPeriodView(newView);
-                                        if (newView === 'Diario') {
-                                            const hoy = new Date().toISOString().split('T')[0];
-                                            setDateFrom(hoy);
-                                            setDateTo(hoy);
-                                        } else {
-                                            // Restaurar rango completo para semanal/mensual
-                                            const allDates = [];
-                                            weeklyData.forEach(d => allDates.push(weekToDate(d.anio, d.semana)));
-                                            dailyData.forEach(d => allDates.push(d.dia));
-                                            allDates.sort();
-                                            if (allDates.length > 0) {
-                                                setDateFrom(allDates[0]);
-                                                setDateTo(allDates[allDates.length - 1]);
-                                            }
-                                        }
-                                    }}
+                                    onChange={(e) => setPeriodView(e.target.value)}
                                 >
                                     <option value="Diario">Diario</option>
                                     <option value="Semanal">Semanal</option>
@@ -1475,7 +1457,13 @@
                                 <h3 className="chart-title">Tendencia de Productividad General</h3>
                                 <div className="chart-container-large">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart data={tendenciaData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                        <ComposedChart data={tendenciaData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                                            onClick={(state) => {
+                                                if (!isDaily) return;
+                                                const item = state?.activePayload?.[0]?.payload;
+                                                if (item?.dia) abrirModalObs(item.dia);
+                                            }}
+                                            style={{ cursor: isDaily ? 'pointer' : 'default' }}>
                                             <defs>
                                                 <linearGradient id="gradGeneral" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#0E245E" stopOpacity={0.25} />

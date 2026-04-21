@@ -846,10 +846,36 @@ async function loadAdminsSection() {
 
 async function rebalanceAdmins() {
     try {
-        await fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_3_rebalance_administrativos`, {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_3_rebalance_administrativos`, {
             method: 'POST', headers: ADMIN_HEADERS, body: '{}'
         });
-    } catch (e) { console.error('Rebalance fallo:', e); }
+        if (!r.ok) {
+            const txt = await r.text();
+            throw new Error('RPC rebalance HTTP ' + r.status + ': ' + txt);
+        }
+    } catch (e) {
+        console.error('Rebalance RPC fallo, usando fallback client-side:', e);
+        // Fallback: PATCH masivo desde el cliente
+        try {
+            const count = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos?select=id`, {
+                headers: { ...ADMIN_HEADERS, Prefer: 'count=exact' }
+            });
+            const range = count.headers.get('content-range') || '';
+            const m = range.match(/\/(\d+)$/);
+            const n = m ? parseInt(m[1], 10) : 0;
+            if (n > 0) {
+                const pct = 1 / n;
+                const rp = await fetch(`${SUPABASE_URL}/rest/v1/3-administrativos?id=gt.0`, {
+                    method: 'PATCH',
+                    headers: ADMIN_HEADERS,
+                    body: JSON.stringify({ porcentaje: pct })
+                });
+                if (!rp.ok) throw new Error('Fallback PATCH fallo: ' + await rp.text());
+            }
+        } catch (e2) {
+            alert('No se pudo redistribuir %: ' + e2.message + '\nEl admin quedo en 0% - reintenta o avisa.');
+        }
+    }
 }
 
 async function deleteAdmin(id) {

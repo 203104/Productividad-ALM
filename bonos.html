@@ -1067,6 +1067,7 @@ async function rellenarPlantilla(file) {
 
     let matched = 0, totalRows = 0;
     const notFound = [];
+    const rutsEnPlantilla = new Set(); // se llena durante el parseo, con RUT normalizado
 
     // 4) Procesar cada sheet: parsear para identificar celdas a tocar,
     //    luego modificar el STRING XML original con regex (no re-serializar).
@@ -1109,6 +1110,7 @@ async function rellenarPlantilla(file) {
             if (!rutText) continue;
             totalRows++;
             const rutN = normRut(rutText);
+            rutsEnPlantilla.add(rutN);
             const bono = bonosMap.get(rutN);
             if (!bono) {
                 notFound.push({ sheet: sheet.name, rut: String(rutText), nombre: nombreText });
@@ -1168,14 +1170,9 @@ async function rellenarPlantilla(file) {
     a.click();
     URL.revokeObjectURL(url);
 
-    // Detectar personas en el sistema que NO aparecen en la plantilla
-    const rutsEnPlantilla = new Set();
-    for (const sheet of sheets) {
-        const xmlStr2 = await zip.file(sheet.path)?.async('string');
-        if (!xmlStr2) continue;
-        const m = xmlStr2.match(/\d{1,2}\.?\d{3}\.?\d{3}-[0-9Kk]/g) || [];
-        m.forEach(r => rutsEnPlantilla.add(normRut(r)));
-    }
+    // Personas del sistema que NO estan en la plantilla (se compara el Set
+    // rutsEnPlantilla, llenado durante el parseo de cada fila, contra el mapa
+    // de bonos del mes). Asi no dependemos de regex sobre el XML crudo.
     const faltanEnPlantilla = [];
     for (const [rutN, info] of bonosMap.entries()) {
         if (!rutsEnPlantilla.has(rutN) && info.monto > 0) {

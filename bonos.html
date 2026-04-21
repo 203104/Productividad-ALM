@@ -6,7 +6,7 @@
     <title>Bonos ALM - Movimientos por Operario | Trailer Logistics</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -982,6 +982,31 @@ function findColIndex(headers, ...needles) {
     return -1;
 }
 
+// Extrae el texto de una celda XLSX (resolviendo sharedStrings)
+function cellText(cellEl, sharedStrings) {
+    if (!cellEl) return null;
+    const type = cellEl.getAttribute('t');
+    if (type === 's') {
+        const v = cellEl.getElementsByTagName('v')[0];
+        if (!v) return null;
+        return sharedStrings[parseInt(v.textContent, 10)] ?? null;
+    }
+    if (type === 'inlineStr') {
+        const ts = cellEl.getElementsByTagName('t');
+        let s = '';
+        for (let i = 0; i < ts.length; i++) s += ts[i].textContent || '';
+        return s;
+    }
+    const v = cellEl.getElementsByTagName('v')[0];
+    return v ? v.textContent : null;
+}
+
+// Extrae letra de columna de una referencia tipo "B2" → "B"
+function colLetter(ref) {
+    const m = String(ref || '').match(/^([A-Z]+)/);
+    return m ? m[1] : '';
+}
+
 async function rellenarPlantilla(file) {
     const bonosMap = construirBonosPorRut();
     if (bonosMap.size === 0) {
@@ -989,49 +1014,128 @@ async function rellenarPlantilla(file) {
         return;
     }
 
-    // ExcelJS preserva fielmente formulas, estilos, validaciones de hojas no tocadas
-    const buf = await file.arrayBuffer();
-    const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(buf);
+    // Cargamos el xlsx como ZIP y tocamos solo las celdas exactas en los XML
+    // de las hojas relevantes. Todo lo demas queda intacto byte-a-byte.
+    const zip = await JSZip.loadAsync(file);
 
-    let matched = 0;
-    let notFound = [];
-    let totalRows = 0;
-
-    wb.worksheets.forEach(ws => {
-        const headerRow = ws.getRow(1);
-        const headers = [];
-        headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-            headers[colNumber - 1] = cell.value;
-        });
-        const idxRut = findColIndex(headers, 'rut');
-        const idxBono = findColIndex(headers, 'bono producción', 'bono produccion');
-        if (idxRut === -1 || idxBono === -1) return; // hoja sin columnas relevantes
-        const idxNombre = findColIndex(headers, 'nombre');
-        const idxApellido = findColIndex(headers, 'apellido paterno');
-
-        for (let r = 2; r <= ws.rowCount; r++) {
-            const row = ws.getRow(r);
-            const rutCell = row.getCell(idxRut + 1); // ExcelJS es 1-based
-            const rutVal = rutCell.value;
-            if (!rutVal) continue;
-            totalRows++;
-            const rutN = normRut(typeof rutVal === 'object' && rutVal.text ? rutVal.text : rutVal);
-            const bono = bonosMap.get(rutN);
-            if (bono) {
-                row.getCell(idxBono + 1).value = bono.monto;
-                matched++;
-            } else {
-                const nombre = idxNombre >= 0 ? row.getCell(idxNombre + 1).value : (idxApellido >= 0 ? row.getCell(idxApellido + 1).value : '');
-                notFound.push({ sheet: ws.name, rut: String(rutVal), nombre: String(nombre || '') });
-            }
+    // 1) Resolver sharedStrings (si existe)
+    const ssFile = zip.file('xl/sharedStrings.xml');
+    const sharedStrings = [];
+    if (ssFile) {
+        const ssXml = await ssFile.async('string');
+        const ssDoc = new DOMParser().parseFromString(ssXml, 'application/xml');
+        const sis = ssDoc.getElementsByTagName('si');
+        for (let i = 0; i < sis.length; i++) {
+            const ts = sis[i].getElementsByTagName('t');
+            let s = '';
+            for (let j = 0; j < ts.length; j++) s += ts[j].textContent || '';
+            sharedStrings.push(s);
         }
-    });
+    }
 
+    // 2) Relaciones del workbook: rId → target (sheetN.xml)
+    const relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+    const relsDoc = new DOMParser().parseFromString(relsXml, 'application/xml');
+    const relMap = {};
+    const rels = relsDoc.getElementsByTagName('Relationship');
+    for (let i = 0; i < rels.length; i++) {
+        relMap[rels[i].getAttribute('Id')] = rels[i].getAttribute('Target');
+    }
+
+    // 3) Leer workbook.xml para los sheets con su nombre y rId
+    const wbXml = await zip.file('xl/workbook.xml').async('string');
+    const wbDoc = new DOMParser().parseFromString(wbXml, 'application/xml');
+    const sheets = [];
+    const sheetNodes = wbDoc.getElementsByTagName('sheet');
+    for (let i = 0; i < sheetNodes.length; i++) {
+        const name = sheetNodes[i].getAttribute('name');
+        const rid = sheetNodes[i].getAttribute('r:id') || sheetNodes[i].getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+        const target = relMap[rid];
+        if (!target) continue;
+        const sheetPath = target.startsWith('/') ? target.slice(1) : 'xl/' + target.replace(/^\.\//, '');
+        sheets.push({ name, path: sheetPath });
+    }
+
+    let matched = 0, totalRows = 0;
+    const notFound = [];
+
+    // 4) Procesar cada sheet que tenga las columnas correctas
+    for (const sheet of sheets) {
+        const xmlStr = await zip.file(sheet.path)?.async('string');
+        if (!xmlStr) continue;
+        const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+        const rows = doc.getElementsByTagName('row');
+        if (rows.length < 2) continue;
+
+        // Headers en fila 1
+        const headerCells = rows[0].getElementsByTagName('c');
+        const headers = [];
+        for (let c = 0; c < headerCells.length; c++) {
+            headers.push({
+                col: colLetter(headerCells[c].getAttribute('r')),
+                text: cellText(headerCells[c], sharedStrings) || ''
+            });
+        }
+        const rutH = headers.find(h => /^rut$/i.test((h.text || '').trim()));
+        const bonoH = headers.find(h => /bono\s*producci(o|ó)n/i.test(h.text || ''));
+        if (!rutH || !bonoH) continue;
+        const nombreH = headers.find(h => /^nombre$/i.test(h.text || ''));
+
+        // Iterar filas desde la 2
+        for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+            const cells = row.getElementsByTagName('c');
+            let rutText = null;
+            let bonoCell = null;
+            let nombreText = '';
+            for (let c = 0; c < cells.length; c++) {
+                const cell = cells[c];
+                const col = colLetter(cell.getAttribute('r'));
+                if (col === rutH.col) rutText = cellText(cell, sharedStrings);
+                if (col === bonoH.col) bonoCell = cell;
+                if (nombreH && col === nombreH.col) nombreText = cellText(cell, sharedStrings) || '';
+            }
+            if (!rutText) continue;
+            totalRows++;
+            const rutN = normRut(rutText);
+            const bono = bonosMap.get(rutN);
+            if (!bono) {
+                notFound.push({ sheet: sheet.name, rut: String(rutText), nombre: nombreText });
+                continue;
+            }
+
+            // Escribir monto en la celda BONO PRODUCCION
+            const rowNum = row.getAttribute('r');
+            const bonoAddr = bonoH.col + rowNum;
+            if (!bonoCell) {
+                // crear celda nueva
+                bonoCell = doc.createElementNS(row.namespaceURI, 'c');
+                bonoCell.setAttribute('r', bonoAddr);
+                row.appendChild(bonoCell);
+            } else {
+                // limpiar valor anterior
+                while (bonoCell.firstChild) bonoCell.removeChild(bonoCell.firstChild);
+                bonoCell.removeAttribute('t');
+            }
+            const vEl = doc.createElementNS(row.namespaceURI, 'v');
+            vEl.textContent = String(bono.monto);
+            bonoCell.appendChild(vEl);
+            matched++;
+        }
+
+        // Serializar solo esta hoja
+        const declaration = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+        const newXml = declaration + new XMLSerializer().serializeToString(doc);
+        zip.file(sheet.path, newXml);
+    }
+
+    // 5) Generar zip y descargar
+    const blob = await zip.generateAsync({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
     const anio = $('anioBono').value;
     const mesNombre = MESES[parseInt($('mesBono').value, 10) - 1];
-    const outBuf = await wb.xlsx.writeBuffer();
-    const blob = new Blob([outBuf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

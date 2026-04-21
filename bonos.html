@@ -6,6 +6,7 @@
     <title>Bonos ALM - Movimientos por Operario | Trailer Logistics</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -988,49 +989,49 @@ async function rellenarPlantilla(file) {
         return;
     }
 
+    // ExcelJS preserva fielmente formulas, estilos, validaciones de hojas no tocadas
     const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: 'array', cellStyles: true });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
 
     let matched = 0;
     let notFound = [];
     let totalRows = 0;
 
-    for (const sheetName of wb.SheetNames) {
-        const ws = wb.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-        if (rows.length < 2) continue;
-
-        const headers = rows[0].map(v => v == null ? '' : v);
+    wb.worksheets.forEach(ws => {
+        const headerRow = ws.getRow(1);
+        const headers = [];
+        headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            headers[colNumber - 1] = cell.value;
+        });
         const idxRut = findColIndex(headers, 'rut');
         const idxBono = findColIndex(headers, 'bono producción', 'bono produccion');
-        if (idxRut === -1 || idxBono === -1) {
-            console.warn(`Hoja "${sheetName}": no se encontraron columnas rut/bono produccion`);
-            continue;
-        }
+        if (idxRut === -1 || idxBono === -1) return; // hoja sin columnas relevantes
+        const idxNombre = findColIndex(headers, 'nombre');
+        const idxApellido = findColIndex(headers, 'apellido paterno');
 
-        for (let r = 1; r < rows.length; r++) {
-            const rutCell = rows[r][idxRut];
-            if (!rutCell) continue;
+        for (let r = 2; r <= ws.rowCount; r++) {
+            const row = ws.getRow(r);
+            const rutCell = row.getCell(idxRut + 1); // ExcelJS es 1-based
+            const rutVal = rutCell.value;
+            if (!rutVal) continue;
             totalRows++;
-            const rutN = normRut(rutCell);
+            const rutN = normRut(typeof rutVal === 'object' && rutVal.text ? rutVal.text : rutVal);
             const bono = bonosMap.get(rutN);
             if (bono) {
-                // Escribir en la celda correspondiente (fila r en zero-based → r en sheet es r+1 base 1; encoded por XLSX.utils.encode_cell)
-                const addr = XLSX.utils.encode_cell({ r, c: idxBono });
-                ws[addr] = { t: 'n', v: bono.monto };
+                row.getCell(idxBono + 1).value = bono.monto;
                 matched++;
             } else {
-                const nombre = rows[r][findColIndex(headers, 'nombre')] || rows[r][findColIndex(headers, 'apellido paterno')] || '';
-                notFound.push({ sheet: sheetName, rut: String(rutCell), nombre: String(nombre) });
+                const nombre = idxNombre >= 0 ? row.getCell(idxNombre + 1).value : (idxApellido >= 0 ? row.getCell(idxApellido + 1).value : '');
+                notFound.push({ sheet: ws.name, rut: String(rutVal), nombre: String(nombre || '') });
             }
         }
-    }
+    });
 
-    // Descargar
     const anio = $('anioBono').value;
     const mesNombre = MESES[parseInt($('mesBono').value, 10) - 1];
-    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
-    const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const outBuf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([outBuf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1038,7 +1039,6 @@ async function rellenarPlantilla(file) {
     a.click();
     URL.revokeObjectURL(url);
 
-    // Resumen
     let msg = `✓ Plantilla rellenada\n\n${matched} personas con bono asignado\n${notFound.length} sin match (de ${totalRows} filas con RUT)`;
     if (notFound.length && notFound.length <= 20) {
         msg += '\n\nSin match:\n' + notFound.map(n => `  - ${n.rut}  ${n.nombre}`).join('\n');

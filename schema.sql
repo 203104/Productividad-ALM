@@ -427,6 +427,30 @@ CREATE POLICY bcm_all_update ON "3-bono_config_mensual" FOR UPDATE TO public USI
 CREATE POLICY bcm_all_delete ON "3-bono_config_mensual" FOR DELETE TO public USING (true);
 
 
+-- 6d. OBSERVACIONES POR DIA
+-- ============================================================
+-- Comentario libre por dia (uno por dia). Editable desde el dashboard
+-- clickeando un punto del grafico de Tendencia de Productividad General
+-- en vista Diaria. Util para que el supervisor registre el motivo de
+-- una productividad baja (falla de equipo, camiones simultaneos, etc).
+CREATE TABLE IF NOT EXISTS "3-observaciones_dia" (
+    id           SERIAL PRIMARY KEY,
+    dia          DATE NOT NULL UNIQUE,
+    observacion  TEXT NOT NULL,
+    autor        TEXT,
+    created_at   TIMESTAMPTZ DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_obs_dia ON "3-observaciones_dia" (dia);
+
+ALTER TABLE "3-observaciones_dia" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY obs_all_select ON "3-observaciones_dia" FOR SELECT TO public USING (true);
+CREATE POLICY obs_all_insert ON "3-observaciones_dia" FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY obs_all_update ON "3-observaciones_dia" FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY obs_all_delete ON "3-observaciones_dia" FOR DELETE TO public USING (true);
+
+
 -- 7. FUNCION: DETECTAR OPERARIOS NUEVOS (PENDIENTES)
 -- ============================================================
 -- Busca usuarios WMS presentes en historial_cajas/destino que NO esten

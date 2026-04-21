@@ -24,6 +24,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 - `3-administrativos` - Catalogo de personas que NO pinchan pallets pero reciben bono (supervisores, encargados, aseo, ejecutivos de cuenta, etc.). CRUD manual desde `bonos.html`.
 - `3-administrativos_bono_mensual` - Evaluacion por mes de bono para cada administrativo: `cumplimiento` (0-1), `descuento`, `le_corresponde` (flag regalo), snapshot del pozo y regalo aplicados. Una fila por `(admin, anio, mes)`.
 - `3-bono_config_mensual` - Config del pozo por mes: `pallets_facturados` (entrada manual al inicio del bono) + `valor_pallet` (calculado por tramo) + `pozo_total`. Tramos: ≤15.000→$75, 15.001-25.000→$85, 25.001-30.000→$115, >30.000→$125.
+- `3-observaciones_dia` - Comentario libre por dia (unique por dia) para registrar motivos de productividad alta/baja. Editable desde el dashboard clickeando los puntos del grafico diario.
 - `3-operarios_alias` - Mapeo de nombres manuales de minuta a usuario WMS (ej: GVALENZUELA -> GUVALENZUE)
 - `3-historial_cajas` - Movimientos LPN de cajas desde WMS (solo registra al recepcionista)
 - `3-historial_destino` - Movimientos LPN destino desde WMS (solo registra al gruero)
@@ -46,6 +47,7 @@ Plataforma web que permite cargar datos del WMS, calcular automaticamente la pro
 | `index.html` | `3-productividad_final` | SELECT para verificacion post-carga |
 | `dashboard.html` | `3-productividad_final`, `3-productividad_semanal` | SELECT principal del dashboard |
 | `dashboard.html` | `1-minuta_operacional` | SELECT lineas IN+OUT por dia |
+| `dashboard.html` | `3-observaciones_dia` | CRUD de comentarios por dia (click en punto del grafico diario) |
 | `operarios.html` | `3-operarios` | CRUD completo |
 | `bonos.html` | `3-productividad_final` | SELECT + agregacion por usuario en periodo de bono (16 del mes X al 15 del mes X+1) |
 | `bonos.html` | `3-administrativos` + `3-administrativos_bono_mensual` | CRUD de administrativos + upsert de evaluacion mensual (cumplimiento, descuento, regalo) |

@@ -897,8 +897,88 @@
             const [cargosInitialized, setCargosInitialized] = useState(false);
             const [flujoData, setFlujoData] = useState([]);
             const [flujoLoading, setFlujoLoading] = useState(false);
+            const [observacionesMap, setObservacionesMap] = useState(new Map());
+            const [modalObsOpen, setModalObsOpen] = useState(false);
+            const [modalObsDia, setModalObsDia] = useState(null);
+            const [modalObsTexto, setModalObsTexto] = useState('');
+            const [modalObsAutor, setModalObsAutor] = useState(() => localStorage.getItem('obsAutor') || '');
+            const [modalObsSaving, setModalObsSaving] = useState(false);
 
             // Recalcular productividad desde la vista (incluye minutas)
+            // ==== OBSERVACIONES POR DIA ====
+            const fetchObservaciones = async () => {
+                try {
+                    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-observaciones_dia?select=dia,observacion,autor,updated_at`, {
+                        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+                    });
+                    if (!r.ok) return;
+                    const rows = await r.json();
+                    const m = new Map();
+                    rows.forEach(row => m.set(row.dia, row));
+                    setObservacionesMap(m);
+                } catch (e) { console.error('obs fetch:', e); }
+            };
+
+            const abrirModalObs = (diaIso) => {
+                if (!diaIso) return;
+                const existing = observacionesMap.get(diaIso);
+                setModalObsDia(diaIso);
+                setModalObsTexto(existing?.observacion || '');
+                if (existing?.autor && !modalObsAutor) setModalObsAutor(existing.autor);
+                setModalObsOpen(true);
+            };
+
+            const guardarObs = async () => {
+                if (!modalObsDia) return;
+                const texto = modalObsTexto.trim();
+                if (!texto) { alert('Escribe un comentario o pulsa Borrar.'); return; }
+                setModalObsSaving(true);
+                try {
+                    const body = {
+                        dia: modalObsDia,
+                        observacion: texto,
+                        autor: modalObsAutor.trim() || null,
+                        updated_at: new Date().toISOString()
+                    };
+                    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-observaciones_dia?on_conflict=dia`, {
+                        method: 'POST',
+                        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+                                   'Content-Type': 'application/json',
+                                   Prefer: 'resolution=merge-duplicates,return=representation' },
+                        body: JSON.stringify(body)
+                    });
+                    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+                    if (modalObsAutor.trim()) localStorage.setItem('obsAutor', modalObsAutor.trim());
+                    await fetchObservaciones();
+                    setModalObsOpen(false);
+                } catch (e) {
+                    alert('Error al guardar: ' + e.message);
+                } finally {
+                    setModalObsSaving(false);
+                }
+            };
+
+            const borrarObs = async () => {
+                if (!modalObsDia) return;
+                if (!confirm('¿Borrar la observación de este día?')) return;
+                setModalObsSaving(true);
+                try {
+                    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-observaciones_dia?dia=eq.${modalObsDia}`, {
+                        method: 'DELETE',
+                        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+                    });
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    await fetchObservaciones();
+                    setModalObsOpen(false);
+                } catch (e) {
+                    alert('Error al borrar: ' + e.message);
+                } finally {
+                    setModalObsSaving(false);
+                }
+            };
+
+            useEffect(() => { fetchObservaciones(); }, []);
+
             const handleRecalculate = async () => {
                 if (recalculating) return;
                 try {
@@ -1156,7 +1236,7 @@
                         }
                         const pallets = parseFloat((item.productividad / item.count).toFixed(2));
                         if (pallets === 0) return null;
-                        return { fecha: item.label, 'Pallets/Hora': pallets, flujo };
+                        return { fecha: item.label, dia: item.key, 'Pallets/Hora': pallets, flujo };
                     })
                     .filter(Boolean);
             }, [filteredData, periodView, isDaily, flujoByDate]);
@@ -1405,12 +1485,38 @@
                                             <CartesianGrid strokeDasharray="3 3" stroke="#AEAEB8" />
                                             <XAxis dataKey="fecha" stroke="#5E6373" />
                                             <YAxis stroke="#5E6373" />
-                                            <Tooltip contentStyle={{ backgroundColor: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px' }} />
+                                            <Tooltip contentStyle={{ backgroundColor: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px' }}
+                                                content={(tp) => {
+                                                    if (!tp.active || !tp.payload || !tp.payload[0]) return null;
+                                                    const d = tp.payload[0].payload;
+                                                    const obs = isDaily && d?.dia ? observacionesMap.get(d.dia) : null;
+                                                    return React.createElement('div', { style: { background: '#FFFEFF', border: '1px solid #AEAEB8', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', maxWidth: '260px' } },
+                                                        React.createElement('div', { style: { fontWeight: 700, color: '#192853' } }, d.fecha),
+                                                        React.createElement('div', { style: { color: '#0E245E' } }, 'Pallets/Hora: ', React.createElement('strong', null, d['Pallets/Hora'])),
+                                                        d.flujo ? React.createElement('div', { style: { color: '#5E6373' } }, 'Flujo: ' + d.flujo) : null,
+                                                        obs ? React.createElement('div', { style: { marginTop: '6px', padding: '6px 8px', background: 'rgba(245,158,11,0.12)', borderLeft: '3px solid #F59E0B', borderRadius: '4px' } },
+                                                            React.createElement('div', { style: { fontSize: '10px', color: '#78350F', fontWeight: 600, textTransform: 'uppercase' } }, '📝 Observación' + (obs.autor ? ' · ' + obs.autor : '')),
+                                                            React.createElement('div', { style: { color: '#212621' } }, (obs.observacion || '').slice(0, 160) + ((obs.observacion || '').length > 160 ? '...' : ''))
+                                                        ) : null,
+                                                        isDaily ? React.createElement('div', { style: { marginTop: '6px', fontSize: '10px', color: '#5E6373', fontStyle: 'italic' } }, '(click para ' + (obs ? 'editar' : 'agregar') + ' comentario)') : null
+                                                    );
+                                                }} />
                                             <ReferenceLine y={30} stroke="#EF4444" strokeWidth={2} strokeDasharray="8 4"
                                                 label={{ value: 'Meta 30', position: 'right', fill: '#EF4444', fontWeight: 600, fontSize: 12 }} />
                                             <Area type="monotone" dataKey="Pallets/Hora" fill="url(#gradGeneral)" stroke="none" />
                                             <Line type="monotone" dataKey="Pallets/Hora" stroke="#0E245E"
-                                                dot={{ fill: '#10B981', r: 4 }} activeDot={{ r: 6 }} strokeWidth={2}>
+                                                dot={(props) => {
+                                                    const { cx, cy, payload } = props;
+                                                    const hasObs = isDaily && payload?.dia && observacionesMap.has(payload.dia);
+                                                    return React.createElement('g', { key: payload?.dia || cx },
+                                                        React.createElement('circle', { cx, cy, r: hasObs ? 6 : 4, fill: hasObs ? '#F59E0B' : '#10B981', stroke: hasObs ? '#78350F' : 'none', strokeWidth: hasObs ? 2 : 0, style: { cursor: isDaily ? 'pointer' : 'default' } }),
+                                                        hasObs ? React.createElement('text', { x: cx, y: cy - 10, textAnchor: 'middle', fontSize: 10 }, '📝') : null
+                                                    );
+                                                }}
+                                                activeDot={{ r: 7, style: { cursor: isDaily ? 'pointer' : 'default' }, onClick: (e, payload) => {
+                                                    if (isDaily && payload?.payload?.dia) abrirModalObs(payload.payload.dia);
+                                                } }}
+                                                strokeWidth={2}>
                                                 <LabelList dataKey="flujo" position="top" style={{ fontSize: '0.68rem', fill: '#5E6373', fontWeight: 600 }} formatter={(v) => v ? v + 'f' : ''} />
                                             </Line>
                                         </ComposedChart>
@@ -1534,6 +1640,42 @@
 
                         <div style={{ height: '2rem' }}></div>
                     </div>
+
+                    {/* Modal de Observacion Diaria */}
+                    {modalObsOpen && (
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setModalObsOpen(false); }}
+                             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ background: '#FFFEFF', borderRadius: '12px', padding: '24px', width: '92%', maxWidth: '520px', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                                    <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#192853', margin: 0 }}>Observación del día</h3>
+                                    <button onClick={() => setModalObsOpen(false)} style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#5E6373' }}>×</button>
+                                </div>
+                                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '18px', fontWeight: 700, color: '#0E245E', marginBottom: '12px' }}>
+                                    {modalObsDia ? new Date(modalObsDia + 'T12:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : ''}
+                                </div>
+                                <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#5E6373', fontWeight: 600 }}>Comentario</label>
+                                <textarea value={modalObsTexto} onChange={(e) => setModalObsTexto(e.target.value)}
+                                    placeholder="Ej: Llegaron 3 camiones simultáneos, demora en descarga por falla en elevador, etc."
+                                    style={{ width: '100%', minHeight: '120px', padding: '10px 12px', border: '1px solid #AEAEB8', borderRadius: '8px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px', resize: 'vertical', marginTop: '4px', marginBottom: '12px' }} />
+                                <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#5E6373', fontWeight: 600 }}>Autor (opcional)</label>
+                                <input type="text" value={modalObsAutor} onChange={(e) => setModalObsAutor(e.target.value)}
+                                    placeholder="Tu nombre"
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #AEAEB8', borderRadius: '8px', fontFamily: 'Montserrat, sans-serif', fontSize: '14px', marginTop: '4px' }} />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '18px' }}>
+                                    <button onClick={borrarObs} disabled={modalObsSaving || !observacionesMap.has(modalObsDia)}
+                                        style={{ background: '#FEE2E2', color: '#7F1D1D', border: '1px solid #FECACA', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: observacionesMap.has(modalObsDia) ? 'pointer' : 'not-allowed', opacity: observacionesMap.has(modalObsDia) ? 1 : 0.4 }}>
+                                        🗑 Borrar
+                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => setModalObsOpen(false)} style={{ background: '#F2F2F5', color: '#5E6373', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+                                        <button onClick={guardarObs} disabled={modalObsSaving} style={{ background: '#0E245E', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                                            {modalObsSaving ? 'Guardando...' : 'Guardar'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </>
             );
         };

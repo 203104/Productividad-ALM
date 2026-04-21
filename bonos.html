@@ -176,6 +176,15 @@
         <input type="file" id="inputPlantilla" accept=".xlsx,.xls" style="display:none" />
     </div>
 
+    <!-- Reporte post-plantilla -->
+    <div id="plantillaReport" style="display:none;background:var(--white);border-radius:12px;padding:20px 24px;margin-top:16px;border-left:4px solid var(--warning)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="font-size:15px;color:var(--navy);margin:0">Resultado del rellenado</h3>
+            <button id="btnClosePlantillaReport" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--slate)">×</button>
+        </div>
+        <div id="plantillaReportContent"></div>
+    </div>
+
     <!-- Configuracion del pozo (pallets facturados → valor x tramo → pozo total) -->
     <div class="admin-config" style="border-left: 4px solid var(--navy);">
         <div class="filter-group">
@@ -1159,11 +1168,110 @@ async function rellenarPlantilla(file) {
     a.click();
     URL.revokeObjectURL(url);
 
-    let msg = `✓ Plantilla rellenada\n\n${matched} personas con bono asignado\n${notFound.length} sin match (de ${totalRows} filas con RUT)`;
-    if (notFound.length && notFound.length <= 20) {
-        msg += '\n\nSin match:\n' + notFound.map(n => `  - ${n.rut}  ${n.nombre}`).join('\n');
+    // Detectar personas en el sistema que NO aparecen en la plantilla
+    const rutsEnPlantilla = new Set();
+    for (const sheet of sheets) {
+        const xmlStr2 = await zip.file(sheet.path)?.async('string');
+        if (!xmlStr2) continue;
+        const m = xmlStr2.match(/\d{1,2}\.?\d{3}\.?\d{3}-[0-9Kk]/g) || [];
+        m.forEach(r => rutsEnPlantilla.add(normRut(r)));
     }
-    alert(msg);
+    const faltanEnPlantilla = [];
+    for (const [rutN, info] of bonosMap.entries()) {
+        if (!rutsEnPlantilla.has(rutN) && info.monto > 0) {
+            faltanEnPlantilla.push({ rut: rutN, ...info });
+        }
+    }
+
+    renderPlantillaReport({ matched, totalRows, notFound, faltanEnPlantilla });
+}
+
+function renderPlantillaReport({ matched, totalRows, notFound, faltanEnPlantilla }) {
+    const el = $('plantillaReport');
+    const content = $('plantillaReportContent');
+
+    const fmtFila = (r, cols) => `<tr>${cols.map(c => `<td>${c}</td>`).join('')}</tr>`;
+
+    let html = `
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:18px">
+            <div>
+                <div style="font-size:11px;text-transform:uppercase;color:var(--slate);font-weight:600">Con bono asignado</div>
+                <div style="font-size:24px;font-weight:700;color:var(--success);font-family:'JetBrains Mono',monospace">${matched}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;text-transform:uppercase;color:var(--slate);font-weight:600">Filas con RUT en plantilla</div>
+                <div style="font-size:24px;font-weight:700;color:var(--navy);font-family:'JetBrains Mono',monospace">${totalRows}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;text-transform:uppercase;color:var(--slate);font-weight:600">En plantilla sin match</div>
+                <div style="font-size:24px;font-weight:700;color:var(--warning);font-family:'JetBrains Mono',monospace">${notFound.length}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;text-transform:uppercase;color:var(--slate);font-weight:600">⚠ Faltan en plantilla</div>
+                <div style="font-size:24px;font-weight:700;color:var(--error);font-family:'JetBrains Mono',monospace">${faltanEnPlantilla.length}</div>
+            </div>
+        </div>
+    `;
+
+    if (faltanEnPlantilla.length) {
+        html += `
+        <details open style="margin-bottom:16px">
+            <summary style="cursor:pointer;font-weight:700;color:var(--error);font-size:14px;margin-bottom:8px">
+                ⚠ ${faltanEnPlantilla.length} persona(s) del sistema NO están en la plantilla cargada
+                <span style="font-weight:400;color:var(--slate);font-size:12px;margin-left:8px">(probablemente el que carga la plantilla los tiene que agregar)</span>
+            </summary>
+            <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:12px">
+                <thead><tr style="background:var(--ice-grey)">
+                    <th style="text-align:left;padding:6px 10px">Tipo</th>
+                    <th style="text-align:left;padding:6px 10px">Nombre</th>
+                    <th style="text-align:left;padding:6px 10px">RUT</th>
+                    <th style="text-align:right;padding:6px 10px">Bono $</th>
+                </tr></thead>
+                <tbody>
+                ${faltanEnPlantilla.map(f => `<tr style="border-bottom:1px solid var(--ice-grey)">
+                    <td style="padding:6px 10px"><span class="cargo-tag">${f.tipo}</span></td>
+                    <td style="padding:6px 10px">${f.nombre || '-'}</td>
+                    <td style="padding:6px 10px;font-family:'JetBrains Mono',monospace">${f.rut}</td>
+                    <td style="padding:6px 10px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600">${fmtMoney(f.monto)}</td>
+                </tr>`).join('')}
+                </tbody>
+            </table>
+        </details>
+        `;
+    }
+
+    if (notFound.length) {
+        html += `
+        <details style="margin-bottom:8px">
+            <summary style="cursor:pointer;font-weight:700;color:var(--warning);font-size:14px">
+                ⓘ ${notFound.length} fila(s) de la plantilla sin match en el sistema
+                <span style="font-weight:400;color:var(--slate);font-size:12px;margin-left:8px">(no tienen bono calculado — no aparecen en operarios ni admins del mes)</span>
+            </summary>
+            <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:12px">
+                <thead><tr style="background:var(--ice-grey)">
+                    <th style="text-align:left;padding:6px 10px">Hoja</th>
+                    <th style="text-align:left;padding:6px 10px">RUT</th>
+                    <th style="text-align:left;padding:6px 10px">Nombre</th>
+                </tr></thead>
+                <tbody>
+                ${notFound.map(n => `<tr style="border-bottom:1px solid var(--ice-grey)">
+                    <td style="padding:6px 10px">${n.sheet}</td>
+                    <td style="padding:6px 10px;font-family:'JetBrains Mono',monospace">${n.rut}</td>
+                    <td style="padding:6px 10px">${n.nombre || '-'}</td>
+                </tr>`).join('')}
+                </tbody>
+            </table>
+        </details>
+        `;
+    }
+
+    if (!faltanEnPlantilla.length && !notFound.length) {
+        html += '<p style="color:var(--success);font-size:13px">✓ Todos los RUTs de la plantilla tuvieron match, y todos los que tenían bono están en la plantilla.</p>';
+    }
+
+    content.innerHTML = html;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function exportarConsolidado() {
@@ -1233,6 +1341,9 @@ function exportarConsolidado() {
         const file = e.target.files?.[0];
         if (file) rellenarPlantilla(file);
         e.target.value = ''; // permite re-cargar el mismo archivo
+    });
+    $('btnClosePlantillaReport').addEventListener('click', () => {
+        $('plantillaReport').style.display = 'none';
     });
     $('palletsFacturados').addEventListener('input', () => {
         onPalletsChange();

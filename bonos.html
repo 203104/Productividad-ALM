@@ -171,6 +171,8 @@
         <div class="periodo-box">Periodo:<strong id="periodoTxt">-</strong></div>
         <button class="btn-apply" id="btnConsultar">Consultar</button>
         <button class="btn-apply" id="btnConsolidado" style="background:var(--success)">📥 Descargar consolidado</button>
+        <button class="btn-apply" id="btnPlantilla" style="background:var(--royal)">📤 Rellenar plantilla sueldos</button>
+        <input type="file" id="inputPlantilla" accept=".xlsx,.xls" style="display:none" />
     </div>
 
     <!-- Configuracion del pozo (pallets facturados → valor x tramo → pozo total) -->
@@ -927,6 +929,123 @@ async function saveNewAdmin() {
     await loadAdminsSection();
 }
 
+// ========================================================
+// RELLENAR PLANTILLA DE SUELDOS
+// ========================================================
+
+// Normalizar RUT: sin puntos/espacios, guion antes del DV, MAYUSCULA
+function normRut(r) {
+    if (!r) return '';
+    const s = String(r).replace(/\./g, '').replace(/\s/g, '').toUpperCase();
+    // Asegurar guion antes del DV si viene pegado
+    if (s.length >= 2 && s.indexOf('-') === -1) {
+        return s.slice(0, -1) + '-' + s.slice(-1);
+    }
+    return s;
+}
+
+// Construye Map<rutNorm, {monto, tipo, nombre}> con todos los bonos del mes
+function construirBonosPorRut() {
+    const map = new Map();
+    const pozo = parseFloat($('pozoAdmin').value) || 0;
+    const regalo = parseFloat($('regaloAdmin').value) || 0;
+
+    // Operarios
+    if (lastResult?.list?.length) {
+        const pozoOper = currentPozoOperarios;
+        lastResult.list.forEach(r => {
+            const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+            const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
+            const rut = normRut(op.rut);
+            if (rut) map.set(rut, { monto: Math.round(pozoOper * p), tipo: 'Operario', nombre: r.nombre });
+        });
+    }
+    // Administrativos
+    if (admins?.length) {
+        admins.forEach(admin => {
+            const bonoRow = bonoMensualMap.get(admin.id);
+            const c = calcularAdmin(admin, bonoRow, pozo, regalo);
+            const rut = normRut(admin.rut);
+            if (rut) map.set(rut, { monto: Math.round(c.total), tipo: 'Administrativo', nombre: admin.nombre });
+        });
+    }
+    return map;
+}
+
+function findColIndex(headers, ...needles) {
+    const norm = (s) => String(s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    for (let i = 0; i < headers.length; i++) {
+        const h = norm(headers[i]);
+        for (const n of needles) if (h.includes(norm(n))) return i;
+    }
+    return -1;
+}
+
+async function rellenarPlantilla(file) {
+    const bonosMap = construirBonosPorRut();
+    if (bonosMap.size === 0) {
+        alert('No hay bonos calculados para el mes seleccionado. Consulta primero.');
+        return;
+    }
+
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array', cellStyles: true });
+
+    let matched = 0;
+    let notFound = [];
+    let totalRows = 0;
+
+    for (const sheetName of wb.SheetNames) {
+        const ws = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+        if (rows.length < 2) continue;
+
+        const headers = rows[0].map(v => v == null ? '' : v);
+        const idxRut = findColIndex(headers, 'rut');
+        const idxBono = findColIndex(headers, 'bono producción', 'bono produccion');
+        if (idxRut === -1 || idxBono === -1) {
+            console.warn(`Hoja "${sheetName}": no se encontraron columnas rut/bono produccion`);
+            continue;
+        }
+
+        for (let r = 1; r < rows.length; r++) {
+            const rutCell = rows[r][idxRut];
+            if (!rutCell) continue;
+            totalRows++;
+            const rutN = normRut(rutCell);
+            const bono = bonosMap.get(rutN);
+            if (bono) {
+                // Escribir en la celda correspondiente (fila r en zero-based → r en sheet es r+1 base 1; encoded por XLSX.utils.encode_cell)
+                const addr = XLSX.utils.encode_cell({ r, c: idxBono });
+                ws[addr] = { t: 'n', v: bono.monto };
+                matched++;
+            } else {
+                const nombre = rows[r][findColIndex(headers, 'nombre')] || rows[r][findColIndex(headers, 'apellido paterno')] || '';
+                notFound.push({ sheet: sheetName, rut: String(rutCell), nombre: String(nombre) });
+            }
+        }
+    }
+
+    // Descargar
+    const anio = $('anioBono').value;
+    const mesNombre = MESES[parseInt($('mesBono').value, 10) - 1];
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Plantilla_sueldos_${mesNombre}_${anio}_rellenada.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Resumen
+    let msg = `✓ Plantilla rellenada\n\n${matched} personas con bono asignado\n${notFound.length} sin match (de ${totalRows} filas con RUT)`;
+    if (notFound.length && notFound.length <= 20) {
+        msg += '\n\nSin match:\n' + notFound.map(n => `  - ${n.rut}  ${n.nombre}`).join('\n');
+    }
+    alert(msg);
+}
+
 function exportarConsolidado() {
     const anio = $('anioBono').value;
     const mesIdx = parseInt($('mesBono').value, 10) - 1;
@@ -989,6 +1108,12 @@ function exportarConsolidado() {
     $('anioBono').addEventListener('change', onMesChange);
     $('btnConsultar').addEventListener('click', consultar);
     $('btnConsolidado').addEventListener('click', exportarConsolidado);
+    $('btnPlantilla').addEventListener('click', () => $('inputPlantilla').click());
+    $('inputPlantilla').addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) rellenarPlantilla(file);
+        e.target.value = ''; // permite re-cargar el mismo archivo
+    });
     $('palletsFacturados').addEventListener('input', () => {
         onPalletsChange();
         $('palletsDesglose').textContent = 'Override manual (no coincide con la minuta)';

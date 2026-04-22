@@ -443,17 +443,20 @@ async function fetchOperariosMap() {
 let operariosMap = new Map();
 let operariosBonoMap = new Map(); // usuario → { amonestaciones, ausencias, anio, mes }
 
-// 0 → 1.0 (completo), 1 → 0.5 (mitad), 2 o 3 → 0 (nada)
-function factorNivel(n) {
-    const v = parseInt(n, 10) || 0;
-    if (v === 0) return 1;
-    if (v === 1) return 0.5;
+// Factor combinado (amonestaciones + ausencias):
+// suma 0 → 100% · suma 1 → 50% · suma >= 2 → 0%
+function factorCombinado(amon, aus) {
+    const a = parseInt(amon, 10) || 0;
+    const b = parseInt(aus, 10) || 0;
+    const s = a + b;
+    if (s === 0) return 1;
+    if (s === 1) return 0.5;
     return 0;
 }
 
 function selectNivel(valor, dataAttrs) {
     const v = parseInt(valor, 10) || 0;
-    const opts = [0,1,2,3].map(n => `<option value="${n}" ${n===v?'selected':''}>${n}</option>`).join('');
+    const opts = [0,1,2].map(n => `<option value="${n}" ${n===v?'selected':''}>${n}</option>`).join('');
     const color = v >= 2 ? 'var(--error)' : (v === 1 ? 'var(--warning)' : 'var(--slate)');
     return `<select ${dataAttrs} style="padding:4px 8px;border-radius:6px;border:1px solid var(--ice-grey);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${color};background:${v>0?'rgba(212,134,11,0.08)':'var(--white)'};width:56px">${opts}</select>`;
 }
@@ -552,7 +555,7 @@ function render({ list, total, dias }) {
         const amon = parseInt(flag.amonestaciones, 10) || 0;
         const aus = parseInt(flag.ausencias, 10) || 0;
         const ajustado = r.movimientos / divisor;
-        const peso = ajustado * factorNivel(amon) * factorNivel(aus);
+        const peso = ajustado * factorCombinado(amon, aus);
         return { ...r, factor, amon, aus, ajustado, peso, rut: op.rut || '-' };
     });
     const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
@@ -838,15 +841,12 @@ function calcularAdmin(admin, bonoRow, pozo, regaloBase) {
     const considerar = bonoRow ? bonoRow.le_corresponde !== false : true;
     const amon = parseInt(bonoRow?.amonestaciones, 10) || 0;
     const aus = parseInt(bonoRow?.ausencias, 10) || 0;
-    const fAmon = factorNivel(amon);
-    const fAus = factorNivel(aus);
+    const fCombo = factorCombinado(amon, aus);
     const pct = parseFloat(admin.porcentaje) || 0;
     const dineroPersona = pozo * pct;
-    // bono_base = dinero × cumplimiento × factores de niveles - descuento
-    const bonoReal = (dineroPersona * cumpl * fAmon * fAus) - desc;
+    const bonoReal = (dineroPersona * cumpl * fCombo) - desc;
     const regaloCalculado = regaloPorCumplimiento(cumpl, regaloBase);
-    // Regalo tambien se escala por los factores (si amon >= 2 o aus >= 2 → 0)
-    const regalo = (considerar ? regaloCalculado : 0) * fAmon * fAus;
+    const regalo = (considerar ? regaloCalculado : 0) * fCombo;
     return { pct, cumpl, desc, amon, aus, regalo, regaloCalculado, considerar, dineroPersona, bonoReal, total: bonoReal + regalo };
 }
 
@@ -877,11 +877,10 @@ function renderAdmins() {
         const considerar = bonoRow.le_corresponde !== false;
         const amon = parseInt(bonoRow.amonestaciones, 10) || 0;
         const aus = parseInt(bonoRow.ausencias, 10) || 0;
-        const fAmon = factorNivel(amon);
-        const fAus = factorNivel(aus);
-        const peso = pct * cumpl * fAmon * fAus;
+        const fCombo = factorCombinado(amon, aus);
+        const peso = pct * cumpl * fCombo;
         const regaloCalc = regaloPorCumplimiento(cumpl, regaloBase);
-        const regalo = considerar ? regaloCalc * fAmon * fAus : 0;
+        const regalo = considerar ? regaloCalc * fCombo : 0;
         return { admin, pct, cumpl, desc, considerar, amon, aus, peso, regaloCalc, regalo };
     });
     const totalPeso = rows.reduce((s, r) => s + r.peso, 0) || 1;
@@ -1138,7 +1137,7 @@ function construirBonosPorRut() {
             const amon = parseInt(flag.amonestaciones, 10) || 0;
             const aus = parseInt(flag.ausencias, 10) || 0;
             const ajustado = r.movimientos / divisor;
-            return { ...r, peso: ajustado * factorNivel(amon) * factorNivel(aus), op };
+            return { ...r, peso: ajustado * factorCombinado(amon, aus), op };
         });
         const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
         enriched.forEach(r => {
@@ -1427,7 +1426,7 @@ function exportarConsolidado() {
             const amon = parseInt(flag?.amonestaciones, 10) || 0;
             const aus = parseInt(flag?.ausencias, 10) || 0;
             const ajustado = r.movimientos / divisor;
-            return { ...r, amon, aus, peso: ajustado * factorNivel(amon) * factorNivel(aus), op };
+            return { ...r, amon, aus, peso: ajustado * factorCombinado(amon, aus), op };
         });
         const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
         enriched.sort((a, b) => b.peso - a.peso);

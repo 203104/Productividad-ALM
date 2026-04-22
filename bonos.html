@@ -323,12 +323,14 @@
                     <th class="num">Descuento</th>
                     <th class="num">Bono real</th>
                     <th class="num">Regalo (auto)</th>
+                    <th style="text-align:center">Amonest.</th>
+                    <th style="text-align:center">Ausencias</th>
                     <th class="num">Total</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody id="tbodyAdmin">
-                <tr><td colspan="11" class="empty-state">Cargando administrativos...</td></tr>
+                <tr><td colspan="13" class="empty-state">Cargando administrativos...</td></tr>
             </tbody>
         </table>
     </div>
@@ -439,7 +441,22 @@ async function fetchOperariosMap() {
 }
 
 let operariosMap = new Map();
-let operariosBonoMap = new Map(); // usuario → { carta_amonestacion, anio, mes }
+let operariosBonoMap = new Map(); // usuario → { amonestaciones, ausencias, anio, mes }
+
+// 0 → 1.0 (completo), 1 → 0.5 (mitad), 2 o 3 → 0 (nada)
+function factorNivel(n) {
+    const v = parseInt(n, 10) || 0;
+    if (v === 0) return 1;
+    if (v === 1) return 0.5;
+    return 0;
+}
+
+function selectNivel(valor, dataAttrs) {
+    const v = parseInt(valor, 10) || 0;
+    const opts = [0,1,2,3].map(n => `<option value="${n}" ${n===v?'selected':''}>${n}</option>`).join('');
+    const color = v >= 2 ? 'var(--error)' : (v === 1 ? 'var(--warning)' : 'var(--slate)');
+    return `<select ${dataAttrs} style="padding:4px 8px;border-radius:6px;border:1px solid var(--ice-grey);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${color};background:${v>0?'rgba(212,134,11,0.08)':'var(--white)'};width:56px">${opts}</select>`;
+}
 
 async function fetchOperariosBonoMensual(anio, mes) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/3-operarios_bono_mensual?anio=eq.${anio}&mes=eq.${mes}`, {
@@ -525,18 +542,18 @@ function render({ list, total, dias }) {
     actualizarDivisionPozo();
     const pozoOper = currentPozoOperarios;
 
-    // Aplicar factor_ajustado (DIVIDE) + amonestacion (reduce peso 50%).
-    // El pozo se reparte 100% entre todos usando "peso" como clave de distribucion.
-    // Si un operario esta amonestado, lo que "pierde" se redistribuye al resto.
+    // Factor_ajustado DIVIDE + amonestaciones/ausencias (niveles 0-3) multiplican peso.
+    // 0 → 100% · 1 → 50% · 2 o 3 → 0%. El pozo se renormaliza al 100%.
     const enriched = list.map(r => {
         const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
         const factor = op.factor || 1;
         const divisor = factor > 0 ? factor : 1;
-        const flag = operariosBonoMap.get((r.usuario || '').toUpperCase());
-        const amon = flag?.carta_amonestacion === true;
-        const ausen = flag?.ausencia === true;
+        const flag = operariosBonoMap.get((r.usuario || '').toUpperCase()) || {};
+        const amon = parseInt(flag.amonestaciones, 10) || 0;
+        const aus = parseInt(flag.ausencias, 10) || 0;
         const ajustado = r.movimientos / divisor;
-        return { ...r, factor, amon, ausen, ajustado, peso: ajustado * (amon ? 0.5 : 1) * (ausen ? 0.5 : 1), rut: op.rut || '-' };
+        const peso = ajustado * factorNivel(amon) * factorNivel(aus);
+        return { ...r, factor, amon, aus, ajustado, peso, rut: op.rut || '-' };
     });
     const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
     // Ordenar por peso desc (lo que realmente se paga)
@@ -548,18 +565,10 @@ function render({ list, total, dias }) {
         const barW = Math.round((r.peso / max) * 100);
         const p = r.peso / totalPeso;
         const bono = pozoOper * p;
-        const amon = r.amon;
-        const ausen = r.ausen;
         const factorTxt = r.factor !== 1 ? r.factor.toFixed(2) : '1.00';
-        // Factor >1 divide mas → menos bono (rojo); <1 divide menos → mas bono (verde)
         const factorStyle = r.factor > 1 ? 'color:var(--error)' : (r.factor < 1 ? 'color:var(--success)' : 'color:var(--slate)');
-        const amonBg = amon ? 'rgba(201,53,53,0.12)' : 'var(--ice-grey)';
-        const amonBorder = amon ? 'rgba(201,53,53,0.4)' : 'var(--ice-grey)';
-        const amonColor = amon ? 'var(--error)' : 'var(--slate)';
-        const ausenBg = ausen ? 'rgba(212,134,11,0.12)' : 'var(--ice-grey)';
-        const ausenBorder = ausen ? 'rgba(212,134,11,0.4)' : 'var(--ice-grey)';
-        const ausenColor = ausen ? 'var(--warning)' : 'var(--slate)';
-        const bonoReducido = amon || ausen;
+        const bonoReducido = r.amon > 0 || r.aus > 0;
+        const usuarioAttr = `data-usuario="${(r.usuario || '').toUpperCase()}"`;
         return `<tr>
             <td><span class="${posClass}">${i + 1}</span></td>
             <td>${r.nombre || '-'}</td>
@@ -570,28 +579,22 @@ function render({ list, total, dias }) {
             <td class="num" style="${factorStyle};font-family:'JetBrains Mono',monospace">${factorTxt}</td>
             <td class="num">${fmt(Math.round(r.ajustado))}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
             <td class="num">${pct(p)}</td>
-            <td style="text-align:center">
-                <label title="Carta de amonestación (peso del bono a la mitad; lo que pierde se reparte entre los demás)" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:16px;background:${amonBg};border:1px solid ${amonBorder};font-size:11px;font-family:'JetBrains Mono',monospace;color:${amonColor}">
-                    <input type="checkbox" class="ticket-amon" data-usuario="${(r.usuario || '').toUpperCase()}" ${amon ? 'checked' : ''} style="width:13px;height:13px;margin:0" />
-                    ${amon ? 'Amonestado (peso ×½)' : 'Sin amonestación'}
-                </label>
+            <td style="text-align:center" title="0=sin · 1=-50% · 2 o 3=-100%">
+                ${selectNivel(r.amon, `class="sel-amon" ${usuarioAttr}`)}
             </td>
-            <td style="text-align:center">
-                <label title="Ausencia (peso del bono a la mitad; lo que pierde se reparte entre los demás)" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:16px;background:${ausenBg};border:1px solid ${ausenBorder};font-size:11px;font-family:'JetBrains Mono',monospace;color:${ausenColor}">
-                    <input type="checkbox" class="ticket-ausen" data-usuario="${(r.usuario || '').toUpperCase()}" ${ausen ? 'checked' : ''} style="width:13px;height:13px;margin:0" />
-                    ${ausen ? 'Ausente (peso ×½)' : 'Sin ausencia'}
-                </label>
+            <td style="text-align:center" title="0=sin · 1=-50% · 2 o 3=-100%">
+                ${selectNivel(r.aus, `class="sel-aus" ${usuarioAttr}`)}
             </td>
             <td class="num"><strong ${bonoReducido ? 'style="color:var(--error)"' : ''}>${fmtMoney(bono)}</strong></td>
         </tr>`;
     }).join('');
 
-    // Bind checkboxes amonestación y ausencias
-    tbody.querySelectorAll('input.ticket-amon').forEach(chk => {
-        chk.addEventListener('change', handleAmonestacionToggle);
+    // Bind selects nivel (amonestaciones + ausencias)
+    tbody.querySelectorAll('select.sel-amon').forEach(sel => {
+        sel.addEventListener('change', (e) => handleNivelChange(e, 'amonestaciones'));
     });
-    tbody.querySelectorAll('input.ticket-ausen').forEach(chk => {
-        chk.addEventListener('change', handleAusenciaToggle);
+    tbody.querySelectorAll('select.sel-aus').forEach(sel => {
+        sel.addEventListener('change', (e) => handleNivelChange(e, 'ausencias'));
     });
 }
 
@@ -832,16 +835,19 @@ function regaloPorCumplimiento(cumpl, regaloBase) {
 function calcularAdmin(admin, bonoRow, pozo, regaloBase) {
     const cumpl = bonoRow ? parseFloat(bonoRow.cumplimiento) : 1.0;
     const desc = bonoRow ? parseFloat(bonoRow.descuento) : 0;
-    // le_corresponde = override manual (si esta en false, NO se considera el regalo)
-    // Por defecto true (considerar) para que la logica automatica aplique
     const considerar = bonoRow ? bonoRow.le_corresponde !== false : true;
+    const amon = parseInt(bonoRow?.amonestaciones, 10) || 0;
+    const aus = parseInt(bonoRow?.ausencias, 10) || 0;
+    const fAmon = factorNivel(amon);
+    const fAus = factorNivel(aus);
     const pct = parseFloat(admin.porcentaje) || 0;
     const dineroPersona = pozo * pct;
-    const bonoReal = dineroPersona * cumpl - desc;
+    // bono_base = dinero × cumplimiento × factores de niveles - descuento
+    const bonoReal = (dineroPersona * cumpl * fAmon * fAus) - desc;
     const regaloCalculado = regaloPorCumplimiento(cumpl, regaloBase);
-    const regalo = considerar ? regaloCalculado : 0;
-    const total = bonoReal + regalo;
-    return { pct, cumpl, desc, regalo, regaloCalculado, considerar, dineroPersona, bonoReal, total };
+    // Regalo tambien se escala por los factores (si amon >= 2 o aus >= 2 → 0)
+    const regalo = (considerar ? regaloCalculado : 0) * fAmon * fAus;
+    return { pct, cumpl, desc, amon, aus, regalo, regaloCalculado, considerar, dineroPersona, bonoReal, total: bonoReal + regalo };
 }
 
 function fmtMoney(n) {
@@ -851,45 +857,84 @@ function fmtMoney(n) {
 function renderAdmins() {
     const tbody = $('tbodyAdmin');
     if (!admins.length) {
-        tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Sin administrativos. Agregá el primero arriba.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" class="empty-state">Sin administrativos. Agregá el primero arriba.</td></tr>';
         $('kpiAdminCount').textContent = '0';
         $('kpiAdminPct').textContent = '0%';
         $('kpiAdminBono').textContent = '$0';
         return;
     }
     const pozo = parseFloat($('pozoAdmin').value) || 0;
-    const regalo = parseFloat($('regaloAdmin').value) || 0;
+    const regaloBase = parseFloat($('regaloAdmin').value) || 0;
+
+    // PASO 1: calcular peso de cada admin. Peso = pct × cumplimiento × factor_amon × factor_aus.
+    // Luego renormalizamos al pozo para que el delta de quienes tienen reduccion
+    // se reparta entre los demas.
+    const rows = admins.map(admin => {
+        const bonoRow = bonoMensualMap.get(admin.id) || {};
+        const pct = parseFloat(admin.porcentaje) || 0;
+        const cumpl = bonoRow.cumplimiento !== undefined ? parseFloat(bonoRow.cumplimiento) : 1.0;
+        const desc = parseFloat(bonoRow.descuento) || 0;
+        const considerar = bonoRow.le_corresponde !== false;
+        const amon = parseInt(bonoRow.amonestaciones, 10) || 0;
+        const aus = parseInt(bonoRow.ausencias, 10) || 0;
+        const fAmon = factorNivel(amon);
+        const fAus = factorNivel(aus);
+        const peso = pct * cumpl * fAmon * fAus;
+        const regaloCalc = regaloPorCumplimiento(cumpl, regaloBase);
+        const regalo = considerar ? regaloCalc * fAmon * fAus : 0;
+        return { admin, pct, cumpl, desc, considerar, amon, aus, peso, regaloCalc, regalo };
+    });
+    const totalPeso = rows.reduce((s, r) => s + r.peso, 0) || 1;
+
     let sumaPct = 0, sumaTotal = 0;
 
-    tbody.innerHTML = admins.map(admin => {
-        const bonoRow = bonoMensualMap.get(admin.id);
-        const c = calcularAdmin(admin, bonoRow, pozo, regalo);
-        sumaPct += c.pct;
-        sumaTotal += c.total;
-        const cumplPct = Math.round(c.cumpl * 100);
+    tbody.innerHTML = rows.map(r => {
+        const admin = r.admin;
+        // dineroPersona = pozo × peso renormalizado (ya incluye distribucion del delta)
+        const dineroPersona = pozo * (r.peso / totalPeso);
+        const bonoReal = dineroPersona - r.desc;
+        const total = bonoReal + r.regalo;
+        sumaPct += r.pct;
+        sumaTotal += total;
+        const cumplPct = Math.round(r.cumpl * 100);
+        const usuarioAttr = `data-admin-id="${admin.id}"`;
         return `<tr data-admin-id="${admin.id}">
             <td>${admin.nombre || '-'}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${admin.rut || '-'}</td>
             <td><span class="cargo-tag">${admin.cargo || '-'}</span></td>
-            <td class="num">${(c.pct * 100).toFixed(2)}%</td>
+            <td class="num">${(r.pct * 100).toFixed(2)}%</td>
             <td class="num">
                 <input type="number" class="inline-edit" data-field="cumplimiento" min="0" max="100" step="1" value="${cumplPct}" />
             </td>
-            <td class="num">${fmtMoney(c.dineroPersona)}</td>
+            <td class="num">${fmtMoney(dineroPersona)}</td>
             <td class="num">
-                <input type="number" class="inline-edit" data-field="descuento" min="0" step="1000" value="${Math.round(c.desc)}" />
+                <input type="number" class="inline-edit" data-field="descuento" min="0" step="1000" value="${Math.round(r.desc)}" />
             </td>
-            <td class="num">${fmtMoney(c.bonoReal)}</td>
+            <td class="num">${fmtMoney(bonoReal)}</td>
             <td style="text-align:center">
-                <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:16px;background:${c.considerar && c.regaloCalculado > 0 ? 'rgba(27,138,74,0.12)' : 'var(--ice-grey)'};border:1px solid ${c.considerar && c.regaloCalculado > 0 ? 'rgba(27,138,74,0.3)' : 'var(--ice-grey)'};font-size:11px;font-family:'JetBrains Mono',monospace;color:${c.considerar && c.regaloCalculado > 0 ? 'var(--success)' : 'var(--slate)'}">
-                    <input type="checkbox" class="inline-edit" data-field="le_corresponde" ${c.considerar ? 'checked' : ''} ${c.regaloCalculado === 0 ? 'disabled' : ''} style="width:13px;height:13px;margin:0" />
-                    ${fmtMoney(c.regaloCalculado)}
+                <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:16px;background:${r.considerar && r.regaloCalc > 0 ? 'rgba(27,138,74,0.12)' : 'var(--ice-grey)'};border:1px solid ${r.considerar && r.regaloCalc > 0 ? 'rgba(27,138,74,0.3)' : 'var(--ice-grey)'};font-size:11px;font-family:'JetBrains Mono',monospace;color:${r.considerar && r.regaloCalc > 0 ? 'var(--success)' : 'var(--slate)'}">
+                    <input type="checkbox" class="inline-edit" data-field="le_corresponde" ${r.considerar ? 'checked' : ''} ${r.regaloCalc === 0 ? 'disabled' : ''} style="width:13px;height:13px;margin:0" />
+                    ${fmtMoney(r.regalo)}
                 </label>
             </td>
-            <td class="num"><strong>${fmtMoney(c.total)}</strong></td>
+            <td style="text-align:center" title="0=sin · 1=-50% · 2 o 3=-100%">
+                ${selectNivel(r.amon, `class="sel-adm-amon" ${usuarioAttr}`)}
+            </td>
+            <td style="text-align:center" title="0=sin · 1=-50% · 2 o 3=-100%">
+                ${selectNivel(r.aus, `class="sel-adm-aus" ${usuarioAttr}`)}
+            </td>
+            <td class="num"><strong ${(r.amon>0||r.aus>0)?'style="color:var(--error)"':''}>${fmtMoney(total)}</strong></td>
             <td><button class="btn-delete-row" data-admin-id="${admin.id}" title="Eliminar">🗑</button></td>
         </tr>`;
     }).join('');
+
+    // Bind selects niveles admin
+    tbody.querySelectorAll('select.sel-adm-amon').forEach(sel => {
+        sel.addEventListener('change', (e) => handleAdminNivel(e, 'amonestaciones'));
+    });
+    tbody.querySelectorAll('select.sel-adm-aus').forEach(sel => {
+        sel.addEventListener('change', (e) => handleAdminNivel(e, 'ausencias'));
+    });
 
     $('kpiAdminCount').textContent = admins.length;
     $('kpiAdminPct').textContent = (sumaPct * 100).toFixed(2) + '%';
@@ -905,31 +950,31 @@ function renderAdmins() {
     });
 }
 
-async function handleAmonestacionToggle(e) {
-    const usuario = e.target.dataset.usuario;
-    const checked = e.target.checked;
+async function handleAdminNivel(e, campo) {
+    const admin_id = parseInt(e.target.dataset.adminId, 10);
+    const valor = parseInt(e.target.value, 10) || 0;
     const anio = parseInt($('anioBono').value, 10);
     const mes = parseInt($('mesBono').value, 10);
     try {
-        await upsertOperarioFlag(usuario, anio, mes, { carta_amonestacion: checked });
-        if (lastResult) render(lastResult);
+        await upsertBonoMensual(admin_id, anio, mes, { [campo]: valor });
+        renderAdmins();
     } catch (err) {
         alert('Error al guardar: ' + err.message);
-        e.target.checked = !checked;
     }
 }
 
-async function handleAusenciaToggle(e) {
+async function handleNivelChange(e, campo) {
     const usuario = e.target.dataset.usuario;
-    const checked = e.target.checked;
+    const valor = parseInt(e.target.value, 10) || 0;
+    const prev = e.target.dataset.prev || '0';
     const anio = parseInt($('anioBono').value, 10);
     const mes = parseInt($('mesBono').value, 10);
     try {
-        await upsertOperarioFlag(usuario, anio, mes, { ausencia: checked });
+        await upsertOperarioFlag(usuario, anio, mes, { [campo]: valor });
         if (lastResult) render(lastResult);
     } catch (err) {
         alert('Error al guardar: ' + err.message);
-        e.target.checked = !checked;
+        e.target.value = prev;
     }
 }
 
@@ -975,7 +1020,7 @@ async function loadAdminsSection() {
         actualizarDivisionPozo();
         renderAdmins();
     } catch (err) {
-        $('tbodyAdmin').innerHTML = `<tr><td colspan="11" class="empty-state" style="color:var(--error)">Error: ${err.message}</td></tr>`;
+        $('tbodyAdmin').innerHTML = `<tr><td colspan="12" class="empty-state" style="color:var(--error)">Error: ${err.message}</td></tr>`;
     }
 }
 
@@ -1089,11 +1134,11 @@ function construirBonosPorRut() {
             const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
             const factor = op.factor || 1;
             const divisor = factor > 0 ? factor : 1;
-            const flag = operariosBonoMap.get((r.usuario || '').toUpperCase());
-            const amon = flag?.carta_amonestacion === true;
-            const ausen = flag?.ausencia === true;
+            const flag = operariosBonoMap.get((r.usuario || '').toUpperCase()) || {};
+            const amon = parseInt(flag.amonestaciones, 10) || 0;
+            const aus = parseInt(flag.ausencias, 10) || 0;
             const ajustado = r.movimientos / divisor;
-            return { ...r, peso: ajustado * (amon ? 0.5 : 1) * (ausen ? 0.5 : 1), op };
+            return { ...r, peso: ajustado * factorNivel(amon) * factorNivel(aus), op };
         });
         const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
         enriched.forEach(r => {
@@ -1379,10 +1424,10 @@ function exportarConsolidado() {
             const factor = op.factor || 1;
             const divisor = factor > 0 ? factor : 1;
             const flag = operariosBonoMap.get((r.usuario || '').toUpperCase());
-            const amon = flag?.carta_amonestacion === true;
-            const ausen = flag?.ausencia === true;
+            const amon = parseInt(flag?.amonestaciones, 10) || 0;
+            const aus = parseInt(flag?.ausencias, 10) || 0;
             const ajustado = r.movimientos / divisor;
-            return { ...r, amon, ausen, peso: ajustado * (amon ? 0.5 : 1) * (ausen ? 0.5 : 1), op };
+            return { ...r, amon, aus, peso: ajustado * factorNivel(amon) * factorNivel(aus), op };
         });
         const totalPeso = enriched.reduce((s, r) => s + r.peso, 0) || 1;
         enriched.sort((a, b) => b.peso - a.peso);
@@ -1393,8 +1438,8 @@ function exportarConsolidado() {
                 'Nombre': r.nombre || '',
                 'RUT': r.op.rut || '',
                 'Cargo': r.cargo || '',
-                'Amonestación': r.amon ? 'Sí' : '',
-                'Ausencias': r.ausen ? 'Sí' : '',
+                'Amonestaciones': r.amon,
+                'Ausencias': r.aus,
                 'Monto': Math.round(pozoOper * p)
             });
         });

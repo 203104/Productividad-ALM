@@ -253,12 +253,14 @@
                     <th>Usuario WMS</th>
                     <th>Cargo</th>
                     <th class="num">Movimientos</th>
+                    <th class="num">Factor</th>
+                    <th class="num">Movs. ajustados</th>
                     <th class="num">% del total</th>
                     <th class="num">Bono $</th>
                 </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="8" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
+                <tr><td colspan="10" class="empty-state">Selecciona un rango de fechas y haz clic en "Consultar".</td></tr>
             </tbody>
         </table>
     </div>
@@ -421,13 +423,16 @@ async function ping() {
 }
 
 async function fetchOperariosMap() {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-operarios?select=usuario,rut,cargo,nombre`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/3-operarios?select=usuario,rut,cargo,nombre,factor_ajustado`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     if (!r.ok) return new Map();
     const rows = await r.json();
     const m = new Map();
-    rows.forEach(o => m.set((o.usuario || '').toUpperCase(), { rut: o.rut, cargo: o.cargo, nombre: o.nombre }));
+    rows.forEach(o => m.set((o.usuario || '').toUpperCase(), {
+        rut: o.rut, cargo: o.cargo, nombre: o.nombre,
+        factor: parseFloat(o.factor_ajustado) || 1
+    }));
     return m;
 }
 
@@ -480,27 +485,40 @@ function render({ list, total, dias }) {
 
     const tbody = $('tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Sin movimientos en el rango seleccionado.</td></tr>';
         actualizarDivisionPozo();
         return;
     }
     actualizarDivisionPozo();
     const pozoOper = currentPozoOperarios;
-    const max = list[0].movimientos || 1;
-    tbody.innerHTML = list.map((r, i) => {
-        const posClass = i < 3 ? 'pos top' : 'pos';
-        const barW = Math.round((r.movimientos / max) * 100);
-        const p = total > 0 ? r.movimientos / total : 0;
-        const bono = pozoOper * p;
+
+    // Aplicar factor_ajustado: cada operario amplifica/reduce sus movs
+    const enriched = list.map(r => {
         const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
-        const rut = op.rut || '-';
+        const factor = op.factor || 1;
+        return { ...r, factor, ajustado: r.movimientos * factor, rut: op.rut || '-' };
+    });
+    const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
+    // Reordenar por bono (ajustado) desc — el ranking refleja lo que se paga
+    enriched.sort((a, b) => b.ajustado - a.ajustado);
+    const max = enriched[0]?.ajustado || 1;
+
+    tbody.innerHTML = enriched.map((r, i) => {
+        const posClass = i < 3 ? 'pos top' : 'pos';
+        const barW = Math.round((r.ajustado / max) * 100);
+        const p = r.ajustado / totalAjustado;
+        const bono = pozoOper * p;
+        const factorTxt = r.factor !== 1 ? r.factor.toFixed(2) : '1.00';
+        const factorStyle = r.factor > 1 ? 'color:var(--success)' : (r.factor < 1 ? 'color:var(--error)' : 'color:var(--slate)');
         return `<tr>
             <td><span class="${posClass}">${i + 1}</span></td>
             <td>${r.nombre || '-'}</td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${rut}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.rut}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate)">${r.usuario || '-'}</td>
             <td>${r.cargo ? `<span class="cargo-tag">${r.cargo}</span>` : '-'}</td>
-            <td class="num">${fmt(r.movimientos)}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
+            <td class="num">${fmt(r.movimientos)}</td>
+            <td class="num" style="${factorStyle};font-family:'JetBrains Mono',monospace">${factorTxt}</td>
+            <td class="num">${fmt(Math.round(r.ajustado))}<span class="bar-wrap"><span class="bar-fill" style="width:${barW}%"></span></span></td>
             <td class="num">${pct(p)}</td>
             <td class="num"><strong>${fmtMoney(bono)}</strong></td>
         </tr>`;
@@ -549,7 +567,7 @@ function actualizarPeriodo() {
 async function consultar() {
     const { desde, hasta } = periodoActual();
     $('btnConsultar').disabled = true;
-    $('tbody').innerHTML = '<tr><td colspan="8" class="loading">Cargando...</td></tr>';
+    $('tbody').innerHTML = '<tr><td colspan="10" class="loading">Cargando...</td></tr>';
     try {
         const [rows, mapa] = await Promise.all([fetchAll(desde, hasta), fetchOperariosMap()]);
         operariosMap = mapa;
@@ -960,13 +978,17 @@ function construirBonosPorRut() {
     const pozo = parseFloat($('pozoAdmin').value) || 0;
     const regalo = parseFloat($('regaloAdmin').value) || 0;
 
-    // Operarios
+    // Operarios (con factor ajustado)
     if (lastResult?.list?.length) {
         const pozoOper = currentPozoOperarios;
-        lastResult.list.forEach(r => {
-            const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+        const enriched = lastResult.list.map(r => {
             const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
-            const rut = normRut(op.rut);
+            return { ...r, factor: op.factor || 1, ajustado: r.movimientos * (op.factor || 1), op };
+        });
+        const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
+        enriched.forEach(r => {
+            const p = r.ajustado / totalAjustado;
+            const rut = normRut(r.op.rut);
             if (rut) map.set(rut, { monto: Math.round(pozoOper * p), tipo: 'Operario', nombre: r.nombre });
         });
     }
@@ -1240,16 +1262,21 @@ function exportarConsolidado() {
 
     const filas = [];
 
-    // Operarios
+    // Operarios (con factor ajustado)
     if (lastResult && lastResult.list && lastResult.list.length) {
         const pozoOper = currentPozoOperarios;
-        lastResult.list.forEach(r => {
-            const p = lastResult.total > 0 ? (r.movimientos / lastResult.total) : 0;
+        const enriched = lastResult.list.map(r => {
             const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
+            return { ...r, factor: op.factor || 1, ajustado: r.movimientos * (op.factor || 1), op };
+        });
+        const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
+        enriched.sort((a, b) => b.ajustado - a.ajustado);
+        enriched.forEach(r => {
+            const p = r.ajustado / totalAjustado;
             filas.push({
                 'Tipo': 'Operario',
                 'Nombre': r.nombre || '',
-                'RUT': op.rut || '',
+                'RUT': r.op.rut || '',
                 'Cargo': r.cargo || '',
                 'Monto': Math.round(pozoOper * p)
             });

@@ -492,11 +492,12 @@ function render({ list, total, dias }) {
     actualizarDivisionPozo();
     const pozoOper = currentPozoOperarios;
 
-    // Aplicar factor_ajustado: cada operario amplifica/reduce sus movs
+    // Aplicar factor_ajustado DIVIDIENDO: factor > 1 reduce el bono, < 1 lo aumenta
     const enriched = list.map(r => {
         const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
         const factor = op.factor || 1;
-        return { ...r, factor, ajustado: r.movimientos * factor, rut: op.rut || '-' };
+        const divisor = factor > 0 ? factor : 1;
+        return { ...r, factor, ajustado: r.movimientos / divisor, rut: op.rut || '-' };
     });
     const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
     // Reordenar por bono (ajustado) desc — el ranking refleja lo que se paga
@@ -509,7 +510,8 @@ function render({ list, total, dias }) {
         const p = r.ajustado / totalAjustado;
         const bono = pozoOper * p;
         const factorTxt = r.factor !== 1 ? r.factor.toFixed(2) : '1.00';
-        const factorStyle = r.factor > 1 ? 'color:var(--success)' : (r.factor < 1 ? 'color:var(--error)' : 'color:var(--slate)');
+        // Factor >1 divide mas → menos bono (rojo); <1 divide menos → mas bono (verde)
+        const factorStyle = r.factor > 1 ? 'color:var(--error)' : (r.factor < 1 ? 'color:var(--success)' : 'color:var(--slate)');
         return `<tr>
             <td><span class="${posClass}">${i + 1}</span></td>
             <td>${r.nombre || '-'}</td>
@@ -978,12 +980,14 @@ function construirBonosPorRut() {
     const pozo = parseFloat($('pozoAdmin').value) || 0;
     const regalo = parseFloat($('regaloAdmin').value) || 0;
 
-    // Operarios (con factor ajustado)
+    // Operarios (factor divide)
     if (lastResult?.list?.length) {
         const pozoOper = currentPozoOperarios;
         const enriched = lastResult.list.map(r => {
             const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
-            return { ...r, factor: op.factor || 1, ajustado: r.movimientos * (op.factor || 1), op };
+            const factor = op.factor || 1;
+            const divisor = factor > 0 ? factor : 1;
+            return { ...r, factor, ajustado: r.movimientos / divisor, op };
         });
         const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
         enriched.forEach(r => {
@@ -1262,12 +1266,14 @@ function exportarConsolidado() {
 
     const filas = [];
 
-    // Operarios (con factor ajustado)
+    // Operarios (factor divide)
     if (lastResult && lastResult.list && lastResult.list.length) {
         const pozoOper = currentPozoOperarios;
         const enriched = lastResult.list.map(r => {
             const op = operariosMap.get((r.usuario || '').toUpperCase()) || {};
-            return { ...r, factor: op.factor || 1, ajustado: r.movimientos * (op.factor || 1), op };
+            const factor = op.factor || 1;
+            const divisor = factor > 0 ? factor : 1;
+            return { ...r, factor, ajustado: r.movimientos / divisor, op };
         });
         const totalAjustado = enriched.reduce((s, r) => s + r.ajustado, 0) || 1;
         enriched.sort((a, b) => b.ajustado - a.ajustado);
